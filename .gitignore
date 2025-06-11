@@ -1,0 +1,14 @@
+# Ignore Python virtual environment directories
+pyEnv/
+venv/
+.env/
+
+# Ignore binary and object files
+bin/
+obj/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.out
