@@ -30,6 +30,7 @@ endif
 
 all: $(EXEC)
 headless: $(EXEC)
+romeo: $(EXEC)
 
 # Création de l'exécutable
 $(EXEC): main.cxx obj/Particle.o obj/Octree.o obj/MyRNG.o obj/APIRest.o
