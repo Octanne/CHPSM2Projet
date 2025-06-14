@@ -46,7 +46,7 @@ obj/Octree.o: Octree.cxx Octree.hpp obj/Particle.o
 	@mkdir -p obj
 	$(CXX) $(CXXFLAGS_OPTI) -c $< -o $@ $(LDFLAGS_BOOST) $(LDFLAGS_SFML) $(CXXFLAGS_OMP)
 
-obj/APIRest.o: APIRest.cxx APIRest.hpp httplib.h nlohmann/json.hpp
+obj/APIRest.o: APIRest.cxx APIRest.hpp httplib.h nlohmann/json.hpp MyRNG.hpp
 	@mkdir -p obj
 	$(CXX) $(CXXFLAGS_OPTI) -c $< -o $@ $(LDFLAGS_BOOST) $(LDFLAGS_SFML) $(CXXFLAGS_OMP)
 

@@ -1,6 +1,7 @@
 #include "APIRest.hpp"
 
 #include "nlohmann/json.hpp" // Ajoutez du header JSON (https://github.com/nlohmann/json)
+#include "MyRNG.hpp" // Pour la génération de nombres aléatoires
 
 using json = nlohmann::json;
 
@@ -36,12 +37,8 @@ void APIRest::start(int port) {
                 auto j = json::parse(req.body);
                 printf("Received particles data: %s\n", j.dump().c_str());
                 particles.clear();
-                float min_x = std::numeric_limits<float>::max();
-                float min_y = std::numeric_limits<float>::max();
-                float min_z = std::numeric_limits<float>::max();
-                float max_x = std::numeric_limits<float>::lowest();
-                float max_y = std::numeric_limits<float>::lowest();
-                float max_z = std::numeric_limits<float>::lowest();
+                float min_abs = std::numeric_limits<float>::max();
+                float max_abs = std::numeric_limits<float>::lowest();
 
                 for (const auto& jp : j) {
                     float x = jp.value("x", 0.f);
@@ -52,26 +49,30 @@ void APIRest::start(int port) {
                         jp.value("vx", 0.f), jp.value("vy", 0.f), jp.value("vz", 0.f),
                         jp.value("mass", 1.f)
                     );
-                    min_x = std::min(min_x, x);
-                    min_y = std::min(min_y, y);
-                    min_z = std::min(min_z, z);
-                    max_x = std::max(max_x, x);
-                    max_y = std::max(max_y, y);
-                    max_z = std::max(max_z, z);
+                    // Mise à jour des valeurs minimales et maximales 
+                    // min_abs est la valeur la plus basse parmi les x, y, z (en tenant compte des négatifs)
+                    // max_abs est la valeur la plus haute parmi les x, y, z
+                    min_abs = std::min({min_abs, x, y, z});
+                    max_abs = std::max({max_abs, x, y, z});
                 }
                 tree.clear(); // Clear the octree to reset it
                 tree.updateAttributes(
-                    min_x, min_y, min_z,
-                    max_x - min_x, max_y - min_y, max_z - min_z,
+                    min_abs, min_abs, min_abs,
+                    max_abs - min_abs, max_abs - min_abs, max_abs - min_abs,
                     1 // Capacity of the octree
                 );
+                // We add margin to the octree to avoid particles being too close to the edges (10% margin)
+                min_abs -= 0.1f * (max_abs - min_abs);
+                max_abs += 0.1f * (max_abs - min_abs);
+                // Update simulation settings
                 settings.nb_particles = particles.size();
-                settings.MIN_X = static_cast<int>(min_x);
-                settings.MIN_Y = static_cast<int>(min_y);
-                settings.MIN_Z = static_cast<int>(min_z);
-                settings.MAX_X = static_cast<int>(max_x);
-                settings.MAX_Y = static_cast<int>(max_y);
-                settings.MAX_Z = static_cast<int>(max_z);
+                settings.MAX_Y = static_cast<int>(max_abs);
+                settings.MAX_X = static_cast<int>(max_abs);
+                settings.MAX_Z = static_cast<int>(max_abs);
+                settings.MIN_Y = static_cast<int>(min_abs);
+                settings.MIN_X = static_cast<int>(min_abs);
+                settings.MIN_Z = static_cast<int>(min_abs);
+                // Reset simulation settings
                 settings.current_time = 0.f; // Reset current time
                 res.status = 200;
             } catch (...) {
@@ -106,6 +107,21 @@ void APIRest::start(int port) {
                 auto j = json::parse(req.body);
                 if (j.contains("t_total")) settings.t_total = j["t_total"];
                 if (j.contains("dt")) settings.dt = j["dt"];
+                if (j.contains("current_time")) settings.current_time = j["current_time"];
+                bool update_bornes = false;
+                if (j.contains("MAX_Y")) { settings.MAX_Y = j["MAX_Y"]; update_bornes = true; }
+                if (j.contains("MAX_X")) { settings.MAX_X = j["MAX_X"]; update_bornes = true; }
+                if (j.contains("MAX_Z")) { settings.MAX_Z = j["MAX_Z"]; update_bornes = true; }
+                if (j.contains("MIN_Y")) { settings.MIN_Y = j["MIN_Y"]; update_bornes = true; }
+                if (j.contains("MIN_X")) { settings.MIN_X = j["MIN_X"]; update_bornes = true; }
+                if (j.contains("MIN_Z")) { settings.MIN_Z = j["MIN_Z"]; update_bornes = true; }
+                if (update_bornes) {
+                    MyRNG::updateMaxMin(
+                        static_cast<float>(settings.MIN_X), static_cast<float>(settings.MAX_X),
+                        static_cast<float>(settings.MIN_Y), static_cast<float>(settings.MAX_Y),
+                        static_cast<float>(settings.MIN_Z), static_cast<float>(settings.MAX_Z)
+                    );
+                }
                 if (j.contains("nb_particles")) {
                     settings.nb_particles = j["nb_particles"];
                     particles.reserve(settings.nb_particles);
@@ -114,17 +130,13 @@ void APIRest::start(int port) {
                         particles.push_back(Particle());
                     }
                     // Optionnel : ajouter une particule massive au centre pour influencer les autres
-                    particles.push_back(Particle(500.0f, 500.0f, 500.0f, 0.0f, 0.0f, 0.0f, 1e13));
+                    float center_x = (settings.MIN_X + settings.MAX_X) / 2.0f;
+                    float center_y = (settings.MIN_Y + settings.MAX_Y) / 2.0f;
+                    float center_z = (settings.MIN_Z + settings.MAX_Z) / 2.0f;
+                    particles.push_back(Particle(center_x, center_y, center_z, 0.0f, 0.0f, 0.0f, 1e13));
                 }
-                if (j.contains("current_time")) settings.current_time = j["current_time"];
-                if (j.contains("MAX_Y")) settings.MAX_Y = j["MAX_Y"];
-                if (j.contains("MAX_X")) settings.MAX_X = j["MAX_X"];
-                if (j.contains("MAX_Z")) settings.MAX_Z = j["MAX_Z"];
-                if (j.contains("MIN_Y")) settings.MIN_Y = j["MIN_Y"];
-                if (j.contains("MIN_X")) settings.MIN_X = j["MIN_X"];
-                if (j.contains("MIN_Z")) settings.MIN_Z = j["MIN_Z"];
                 tree.clear(); // Clear the octree to reset it
-                // Mettre à jour l'octree avec les nouvelles dimensions
+                // Mettre à jour les bornes de l'octree
                 tree.updateAttributes(
                     static_cast<float>(settings.MIN_X), static_cast<float>(settings.MIN_Y), static_cast<float>(settings.MIN_Z),
                     static_cast<float>(settings.MAX_X - settings.MIN_X), static_cast<float>(settings.MAX_Y - settings.MIN_Y), static_cast<float>(settings.MAX_Z - settings.MIN_Z),

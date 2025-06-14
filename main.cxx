@@ -92,9 +92,7 @@ int main(int argc, char *argv[]) {
     std::vector<Particle> particles = initParticles(N);
 
     // Paramètres de simulation partagés
-    SimulationSettings settings{simulMaxTime, 0.5, N, 0.f, false,
-                                static_cast<int>(Y_MAX), static_cast<int>(X_MAX), static_cast<int>(Z_MAX),
-                                static_cast<int>(Y_MIN), static_cast<int>(X_MIN), static_cast<int>(Z_MIN)};
+    SimulationSettings settings{simulMaxTime, 0.5, N, 0.f, false, Y_MAX, X_MAX, Z_MAX, Y_MIN, X_MIN, Z_MIN};
     std::mutex mtx;
     std::atomic<bool> paused(pausedD);
     std::atomic<bool> closed(false);
