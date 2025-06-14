@@ -21,6 +21,13 @@ else
 CXXFLAGS_OPTI += -DDISPLAY_VERSION=1
 endif
 
+# Si romeo
+ifeq ($(MAKECMDGOALS),romeo)
+BOOST_ROOT := $(shell spack location -i boost@1.86.0/2j24j6c)
+CXXFLAGS += -I$(BOOST_ROOT)/include
+LDFLAGS  += -L$(BOOST_ROOT)/lib
+endif
+
 all: $(EXEC)
 headless: $(EXEC)
 
