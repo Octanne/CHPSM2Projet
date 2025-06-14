@@ -5,7 +5,7 @@ CXX_MPI = mpicxx
 # Flags de compilation
 CXXFLAGS = -Wall -g
 CXXFLAGS_OMP = -fopenmp
-CXXFLAGS_OPTI = -std=c++11 -g -O3 -march=native --fast-math -fno-omit-frame-pointer -funroll-loops 
+CXXFLAGS_OPTI = -std=c++11 -g -O3 -march=native --fast-math -fno-omit-frame-pointer -funroll-loops
 
 # Flags de linkage
 LDFLAGS_SFML = -lsfml-graphics -lsfml-window -lsfml-system -lGL -lGLU
