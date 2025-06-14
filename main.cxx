@@ -29,9 +29,6 @@
 #include <boost/chrono.hpp>
 #include "MyRNG.hpp"
 
-const float t_total = 50.0f;  // Temps total de simulation
-const float dt = 0.5f;        // Pas de temps
-
 // Mise à jour de l'état d'une particule en utilisant l'octree
 void updateParticleState(Particle &p, const Octree &tree, float dt) {
     p.resetAcceleration();
@@ -58,12 +55,14 @@ int main(int argc, char *argv[]) {
     int N;
     bool display;
     bool drawOctreeBorders;
+    float simulMaxTime;
     int portAPI;
     po::options_description desc("Options autorisées");
     desc.add_options()
         ("help,h", "affiche ce message d'aide")
         ("port-api", po::value<int>(&portAPI)->default_value(8080), "port du serveur API REST")
         ("particles", po::value<int>(&N)->required(), "nombre de particules")
+        ("simulTime", po::value<float>(&simulMaxTime)->default_value(50.0f), "pas de fin de simulation (0 pour infini)")
         ("display", po::value<bool>(&display)->default_value(true), "mode affichage (true/false)")
         ("drawOctreeBorders", po::value<bool>(&drawOctreeBorders)->default_value(true), "afficher les bords de l'octree (true/false)");
     po::positional_options_description p;
@@ -86,9 +85,12 @@ int main(int argc, char *argv[]) {
     std::vector<Particle> particles = initParticles(N);
 
     // Paramètres de simulation partagés
-    SimulationSettings settings{t_total, dt, N};
+    SimulationSettings settings{simulMaxTime, 0.5, N, 0.f, false,
+                                static_cast<int>(Y_MAX), static_cast<int>(X_MAX), static_cast<int>(Z_MAX),
+                                static_cast<int>(Y_MIN), static_cast<int>(X_MIN), static_cast<int>(Z_MIN)};
     std::mutex mtx;
     std::atomic<bool> paused(false);
+    std::atomic<bool> closed(false);
 
     // Lancer le serveur REST
     APIRest api(particles, settings, paused, mtx);
@@ -207,13 +209,12 @@ int main(int argc, char *argv[]) {
         }
     } else {
         // Mode headless avec mesure du temps via Boost.Chrono
-        float simulationTime = 0.f;
         Octree tree(X_MIN, Y_MIN, Z_MIN, X_MAX - X_MIN, Y_MAX - Y_MIN, Z_MAX - Z_MIN, 1);
         for (const auto &p : particles) {
             tree.insert(&p);
         }
-        auto start = boost::chrono::steady_clock::now();
-        while (simulationTime < settings.t_total) {
+        printf("Simulation en mode headless pour %d secondes avec %d particules...\n", static_cast<int>(settings.t_total), N);
+        while (settings.current_time < settings.t_total) {
             if (!paused) {
                 #pragma omp parallel for 
                 for (auto &p : particles) {
@@ -223,13 +224,13 @@ int main(int argc, char *argv[]) {
                 for (const auto &p : particles) {
                     tree.insert(&p);
                 }
-                simulationTime += settings.dt;
+                settings.current_time += settings.dt;                
+            }
+
+            while (!settings.closed && settings.current_time >= settings.t_total) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
             }
         }
-        auto end = boost::chrono::steady_clock::now();
-        boost::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps d'exécution simulation (headless) : " 
-                  << elapsed.count() << " secondes." << std::endl;
     }
     api.stop();
     return 0;

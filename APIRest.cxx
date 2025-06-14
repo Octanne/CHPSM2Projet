@@ -55,7 +55,15 @@ void APIRest::start(int port) {
                 {"t_total", settings.t_total},
                 {"dt", settings.dt},
                 {"nb_particles", settings.nb_particles},
-                {"paused", paused.load()}
+                {"paused", paused.load()},
+                {"current_time", settings.current_time},
+                {"closed", settings.closed},
+                {"MAX_Y", settings.MAX_Y},
+                {"MAX_X", settings.MAX_X},
+                {"MAX_Z", settings.MAX_Z},
+                {"MIN_Y", settings.MIN_Y},
+                {"MIN_X", settings.MIN_X},
+                {"MIN_Z", settings.MIN_Z}
             };
             res.set_content(j.dump(), "application/json");
         });
@@ -68,10 +76,18 @@ void APIRest::start(int port) {
                 if (j.contains("t_total")) settings.t_total = j["t_total"];
                 if (j.contains("dt")) settings.dt = j["dt"];
                 if (j.contains("nb_particles")) settings.nb_particles = j["nb_particles"];
+                if (j.contains("current_time")) settings.current_time = j["current_time"];
+                // Si on mets à jours le nombre de particules, on réinitialise
                 res.status = 200;
             } catch (...) {
                 res.status = 400;
             }
+        });
+
+        // POST /stop
+        server.Post("/stop", [this](const httplib::Request&, httplib::Response& res) {
+            settings.closed = true;
+            res.status = 200;
         });
 
         // POST /pause

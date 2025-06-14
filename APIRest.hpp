@@ -14,6 +14,10 @@ struct SimulationSettings {
     float t_total;
     float dt;
     int nb_particles;
+    float current_time;
+    bool closed;
+    int MAX_Y, MAX_X, MAX_Z;
+    int MIN_Y, MIN_X, MIN_Z;
 };
 
 class APIRest {
