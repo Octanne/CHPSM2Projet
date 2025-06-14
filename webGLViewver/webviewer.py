@@ -21,20 +21,12 @@ HTML = """
     <title>Visualisation N-Body 3D</title>
     <style>
         body { margin:0; overflow:hidden; background:#23272f; color:#f3f3f3; font-family: 'Segoe UI', Arial, sans-serif; }
-        #overlay {
-            position:fixed; top:20px; left:20px; background:rgba(34,40,49,0.97);
+        #overlay, #overlay2, #overlay3 {
+            background:rgba(34,40,49,0.97);
             padding:22px 28px 18px 28px; border-radius:12px; box-shadow:0 4px 24px #0008;
             min-width: 320px;
             z-index: 1000;
         }
-        #overlay2 {
-            position:fixed; top:calc(20px + 100% + 20px); left:20px; background:rgba(34,40,49,0.97);
-            padding:22px 28px 18px 28px; border-radius:12px; box-shadow:0 4px 24px #0008;
-            min-width: 320px;
-            z-index: 1000;
-            padding-bottom: 0px;
-        }
-        /* Stack overlays vertically on the left */
         #overlays-container {
             position: fixed;
             top: 20px;
@@ -44,7 +36,7 @@ HTML = """
             gap: 20px;
             z-index: 1000;
         }
-        #overlay, #overlay2 {
+        #overlay, #overlay2, #overlay3 {
             position: static;
             margin: 0;
         }
@@ -97,18 +89,15 @@ HTML = """
             min-width: 170px;
             justify-content: center;
         }
-        
         #downloadParticlesBtn, #uploadParticlesBtn {
             cursor: pointer;
             justify-content: center;
         }
-        
         #pauseBtnText {
             display: inline-block;
             min-width: 70px;
             text-align: center;
         }
-        /* Nouveau style pour le bouton Fermer */
         #closeBtn {
             position: fixed;
             top: 18px;
@@ -143,12 +132,11 @@ HTML = """
             font-weight: 600;
             display: inline-block;
         }
-        /* Ajout pour aligner les boutons Sauver et Envoyer sur la même ligne et les centrer */
         .particles-actions-row {
             display: flex;
             align-items: center;
             gap: 12px;
-            justify-content: center; /* <-- Ajouté pour centrer horizontalement */
+            justify-content: center;
             width: 100%;
         }
         #uploadParticlesStatus {
@@ -156,6 +144,9 @@ HTML = """
             text-align: center;
             margin: 4px;
             color: #ffd369;
+        }
+        #overlay2 {
+            padding-bottom: 0;
         }
     </style>
     <script type="importmap">
@@ -192,9 +183,8 @@ HTML = """
             <div class="form-row">
                 <label for="dt">deltaTime</label>
                 <span class="current-value" id="dt_current"></span>
-                <input type="number" step="0.01" name="dt" id="dt_input" placeholder="Modifier...">
+                <input type="number" step="0.000001" name="dt" id="dt_input" placeholder="Modifier...">
             </div>
-
             <div class="form-actions">
                 <button type="submit" id="updateBtn">
                     <span class="icon" id="updateIcon">
@@ -212,12 +202,57 @@ HTML = """
             </div>
         </form>
     </div>
+    <div id="overlay3">
+        <h2>Limites de la boîte de simulation</h2>
+        <form id="boxForm" autocomplete="off">
+            <div class="form-row">
+                <label for="MIN_X">MIN_X</label>
+                <span class="current-value" id="MIN_X_current"></span>
+                <input type="number" step="0.1" name="MIN_X" id="MIN_X_input" placeholder="Modifier...">
+            </div>
+            <div class="form-row">
+                <label for="MIN_Y">MIN_Y</label>
+                <span class="current-value" id="MIN_Y_current"></span>
+                <input type="number" step="0.1" name="MIN_Y" id="MIN_Y_input" placeholder="Modifier...">
+            </div>
+            <div class="form-row">
+                <label for="MIN_Z">MIN_Z</label>
+                <span class="current-value" id="MIN_Z_current"></span>
+                <input type="number" step="0.1" name="MIN_Z" id="MIN_Z_input" placeholder="Modifier...">
+            </div>
+            <div class="form-row">
+                <label for="MAX_X">MAX_X</label>
+                <span class="current-value" id="MAX_X_current"></span>
+                <input type="number" step="0.1" name="MAX_X" id="MAX_X_input" placeholder="Modifier...">
+            </div>
+            <div class="form-row">
+                <label for="MAX_Y">MAX_Y</label>
+                <span class="current-value" id="MAX_Y_current"></span>
+                <input type="number" step="0.1" name="MAX_Y" id="MAX_Y_input" placeholder="Modifier...">
+            </div>
+            <div class="form-row">
+                <label for="MAX_Z">MAX_Z</label>
+                <span class="current-value" id="MAX_Z_current"></span>
+                <input type="number" step="0.1" name="MAX_Z" id="MAX_Z_input" placeholder="Modifier...">
+            </div>
+            <div class="form-actions">
+                <button type="submit" id="updateBoxBtn">
+                    <span class="icon">
+                        <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
+                            <path d="M10 2a8 8 0 1 1-7.446 5.032l1.857.742A6 6 0 1 0 10 4V2z"/>
+                            <polygon points="2,2 6,2 6,6" fill="#23272f"/>
+                        </svg>
+                    </span>
+                    Mettre à jour
+                </button>
+            </div>
+        </form>
+    </div>
     <div id="overlay2">
         <h2>Gestion Particles</h2>
         <div class="particles-actions-row">
             <button id="downloadParticlesBtn" type="button">
                 <span class="icon">
-                    <!-- Icône Sauver (Download) -->
                     <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 2v10m0 0l-4-4m4 4l4-4" stroke="#23272f" stroke-width="2" fill="none"/>
                         <rect x="4" y="16" width="12" height="2" rx="1" fill="#23272f"/>
@@ -228,7 +263,6 @@ HTML = """
             <input type="file" id="uploadParticlesInput" accept=".json" style="display:none;">
             <button id="uploadParticlesBtn" type="button" id="sendBtn">
                 <span class="icon">
-                    <!-- Icône Envoyer (Upload) -->
                     <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 18V8m0 0l-4 4m4-4l4 4" stroke="#23272f" stroke-width="2" fill="none"/>
                         <rect x="4" y="4" width="12" height="2" rx="1" fill="#23272f"/>
@@ -239,7 +273,6 @@ HTML = """
         </div>
         <div id="uploadParticlesStatus">&nbsp;</div>
         <script>
-        // Download particles as JSON
         document.getElementById('downloadParticlesBtn').onclick = function() {
             fetch('/api/particles').then(r => r.json()).then(data => {
                 const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
@@ -255,8 +288,6 @@ HTML = """
                 }, 100);
             });
         };
-
-        // Upload particles JSON
         document.getElementById('uploadParticlesBtn').onclick = function() {
             document.getElementById('uploadParticlesInput').click();
         };
@@ -292,9 +323,7 @@ HTML = """
     </div>
 </div>
 <canvas id="scene"></canvas>
-
 <script type="module">
-// Use importmap: 'three' points to the module bundle
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/controls/OrbitControls.js';
 
@@ -317,12 +346,9 @@ function init() {
     resize();
     window.addEventListener('resize', resize);
 
-    // OrbitControls for rotation
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-
-    // Initial target at origin or will be updated when settings are fetched
     controls.target.set(0, 0, 0);
     controls.update();
 
@@ -359,7 +385,6 @@ function updateSimBox(box) {
     simBoxHelper = new THREE.Box3Helper(box3, 0x00fffa);
     scene.add(simBoxHelper);
 
-    // Re-center controls target to middle of simulation box
     const center = new THREE.Vector3();
     box3.getCenter(center);
     controls.target.copy(center);
@@ -398,6 +423,13 @@ function fetchSettings() {
                 if (label) label.classList.remove("readonly-label");
             }
         }
+        // Update box overlay fields
+        for (const key of ["MIN_X", "MIN_Y", "MIN_Z", "MAX_X", "MAX_Y", "MAX_Z"]) {
+            if (data[key] !== undefined) {
+                document.getElementById(key + "_current").textContent = data[key];
+                document.getElementById(key + "_input").placeholder = data[key];
+            }
+        }
         if (data.MIN_X !== undefined && data.MIN_Y !== undefined && data.MIN_Z !== undefined &&
             data.MAX_X !== undefined && data.MAX_Y !== undefined && data.MAX_Z !== undefined) {
             updateSimBox({
@@ -412,7 +444,6 @@ function fetchSettings() {
         paused = data.paused;
         updatePauseButton(paused);
 
-        // Disable or enable intervals based on paused state
         if (paused) {
             if (particlesInterval) {
                 clearInterval(particlesInterval);
@@ -477,12 +508,32 @@ document.getElementById('settingsForm').onsubmit = function(e){
         fetchSettings();
     });
 };
+
+document.getElementById('boxForm').onsubmit = function(e){
+    e.preventDefault();
+    const payload = {};
+    for (const key of ["MIN_X", "MIN_Y", "MIN_Z", "MAX_X", "MAX_Y", "MAX_Z"]) {
+        const v = document.getElementById(key + "_input").value;
+        if (v !== "") payload[key] = parseFloat(v);
+    }
+    if (Object.keys(payload).length === 0) return;
+    fetch('/api/settings', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+    }).then(()=>{
+        for (const key of ["MIN_X", "MIN_Y", "MIN_Z", "MAX_X", "MAX_Y", "MAX_Z"]) {
+            document.getElementById(key + "_input").value = "";
+        }
+        fetchSettings();
+    });
+};
+
 document.getElementById('pauseBtn').onclick = function(){
     fetch(paused ? '/api/resume' : '/api/pause', {method:'POST'}).then(()=>fetchSettings());
 };
 document.getElementById('closeBtn').onclick = function() {
     if (confirm("Voulez-vous vraiment fermer l'application ?")) {
-        // Stop intervals when closing
         if (particlesInterval) clearInterval(particlesInterval);
         if (settingsInterval) clearInterval(settingsInterval);
         fetch('/api/stop', {method:'POST'}).then(()=>{
@@ -490,7 +541,6 @@ document.getElementById('closeBtn').onclick = function() {
         });
     }
 };
-// Initialize the scene and fetch initial data
 init();
 fetchSettings();
 fetchParticles();

@@ -59,6 +59,7 @@ void APIRest::start(int port) {
                     max_y = std::max(max_y, y);
                     max_z = std::max(max_z, z);
                 }
+                tree.clear(); // Clear the octree to reset it
                 tree.updateAttributes(
                     min_x, min_y, min_z,
                     max_x - min_x, max_y - min_y, max_z - min_z,
@@ -116,6 +117,19 @@ void APIRest::start(int port) {
                     particles.push_back(Particle(500.0f, 500.0f, 500.0f, 0.0f, 0.0f, 0.0f, 1e13));
                 }
                 if (j.contains("current_time")) settings.current_time = j["current_time"];
+                if (j.contains("MAX_Y")) settings.MAX_Y = j["MAX_Y"];
+                if (j.contains("MAX_X")) settings.MAX_X = j["MAX_X"];
+                if (j.contains("MAX_Z")) settings.MAX_Z = j["MAX_Z"];
+                if (j.contains("MIN_Y")) settings.MIN_Y = j["MIN_Y"];
+                if (j.contains("MIN_X")) settings.MIN_X = j["MIN_X"];
+                if (j.contains("MIN_Z")) settings.MIN_Z = j["MIN_Z"];
+                tree.clear(); // Clear the octree to reset it
+                // Mettre à jour l'octree avec les nouvelles dimensions
+                tree.updateAttributes(
+                    static_cast<float>(settings.MIN_X), static_cast<float>(settings.MIN_Y), static_cast<float>(settings.MIN_Z),
+                    static_cast<float>(settings.MAX_X - settings.MIN_X), static_cast<float>(settings.MAX_Y - settings.MIN_Y), static_cast<float>(settings.MAX_Z - settings.MIN_Z),
+                    1 // Capacity of the octree
+                );
                 res.status = 200;
             } catch (...) {
                 res.status = 400;
