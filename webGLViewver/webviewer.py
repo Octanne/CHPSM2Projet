@@ -254,7 +254,7 @@ HTML = """
         </form>
     </div>
     <div id="overlay2">
-        <h2>Gestion Particles</h2>
+        <h2>Gestion Particules</h2>
         <div class="particles-actions-row">
             <button id="downloadParticlesBtn" type="button">
                 <span class="icon">
@@ -630,4 +630,4 @@ if __name__ == "__main__":
     log = logging.getLogger('werkzeug')
     log.addFilter(No200Filter())
 
-    app.run(port=5000, debug=True)
+    app.run(port=5000, host="0.0.0.0", debug=True)
