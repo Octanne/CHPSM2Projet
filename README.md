@@ -31,7 +31,7 @@
 
 ## Compile, Make, and Run the Compute Server App
 
-0. **Sur romeo:**
+0. **Preparation ROMEO:**
     ```bash
     spack install patch
     spack load patch
@@ -40,8 +40,14 @@
 
 1. **Compile the application:**
 
+    For romeo :
     ```bash
-    make
+    make headless romeo
+    ```
+
+    Else without romeo spack :
+    ```bash
+    make headless
     ```
 
 2. **Run the compute server:**
