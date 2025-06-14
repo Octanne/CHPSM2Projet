@@ -22,7 +22,7 @@ struct SimulationSettings {
 
 class APIRest {
 public:
-    APIRest(std::vector<Particle>& particles, SimulationSettings& settings, std::atomic<bool>& paused, std::mutex& mtx);
+    APIRest(Octree& tree, std::vector<Particle>& particles, SimulationSettings& settings, std::atomic<bool>& paused, std::mutex& mtx);
     void start(int port = 8080);
     void stop();
 
@@ -34,6 +34,7 @@ private:
     SimulationSettings& settings;
     std::atomic<bool>& paused;
     std::mutex& mtx;
+    Octree& tree;
 };
 
 #endif // APIREST_HPP

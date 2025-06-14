@@ -92,8 +92,11 @@ int main(int argc, char *argv[]) {
     std::atomic<bool> paused(false);
     std::atomic<bool> closed(false);
 
+    // Initialisation de l'octree
+    Octree tree(X_MIN, Y_MIN, Z_MIN, X_MAX - X_MIN, Y_MAX - Y_MIN, Z_MAX - Z_MIN, 1);
+
     // Lancer le serveur REST
-    APIRest api(particles, settings, paused, mtx);
+    APIRest api(tree, particles, settings, paused, mtx);
     api.start(portAPI);
 
     if (display) {
@@ -113,7 +116,6 @@ int main(int argc, char *argv[]) {
         float fov = 60.f; // Champ de vision (zoom)
 
         float simulationTime = 0.f;
-        Octree tree(X_MIN, Y_MIN, Z_MIN, X_MAX - X_MIN, Y_MAX - Y_MIN, Z_MAX - Z_MIN, 1);
         for (const auto &p : particles) {
             tree.insert(&p);
         }
@@ -208,21 +210,16 @@ int main(int argc, char *argv[]) {
             sf::sleep(sf::milliseconds(10));
         }
     } else {
-        // Mode headless avec mesure du temps via Boost.Chrono
-        Octree tree(X_MIN, Y_MIN, Z_MIN, X_MAX - X_MIN, Y_MAX - Y_MIN, Z_MAX - Z_MIN, 1);
-        for (const auto &p : particles) {
-            tree.insert(&p);
-        }
         printf("Simulation en mode headless pour %d secondes avec %d particules...\n", static_cast<int>(settings.t_total), N);
         while (settings.current_time < settings.t_total) {
             if (!paused) {
-                #pragma omp parallel for 
-                for (auto &p : particles) {
-                    updateParticleState(p, tree, settings.dt);
-                }
                 tree.clear();
                 for (const auto &p : particles) {
                     tree.insert(&p);
+                }
+                #pragma omp parallel for 
+                for (auto &p : particles) {
+                    updateParticleState(p, tree, settings.dt);
                 }
                 settings.current_time += settings.dt;                
             }
@@ -233,5 +230,7 @@ int main(int argc, char *argv[]) {
         }
     }
     api.stop();
+    // Nettoyage de l'octree
+    Octree::clearInstances();
     return 0;
 }

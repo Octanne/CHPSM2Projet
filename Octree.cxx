@@ -10,6 +10,9 @@
 #include <cmath>
 #include <cstdlib>
 
+// Définition de la variable statique
+std::vector<const Octree*> Octree::instances;
+
 const float G = 6.67430e-11f; // Constante gravitationnelle
 const float theta = 0.5f;     // Seuil d'approximation Barnes-Hut
 const float epsilon = 0.001f; // Facteur d'adoucissement
@@ -22,6 +25,23 @@ Octree::Octree(float x, float y, float z, float width, float height, float depth
         totalMass(0.f), centerOfMass(0.f, 0.f, 0.f) {}
 
 Octree::~Octree() { clear(); }
+
+void Octree::updateAttributes(float newX, float newY, float newZ, float newWidth, float newHeight, float newDepth, int newCapacity)
+{
+    x = newX;
+    y = newY;
+    z = newZ;
+    width = newWidth;
+    height = newHeight;
+    depth = newDepth;
+    capacity = newCapacity;
+
+    // Réinitialisation des attributs de masse et centre de masse
+    totalMass = 0.f;
+    centerOfMass.x = 0.f;
+    centerOfMass.y = 0.f;
+    centerOfMass.z = 0.f;
+}
 
 // Vérifie si la particule se trouve dans le volume de l'octree
 bool Octree::contains(const Particle *p) const {
@@ -148,6 +168,28 @@ void Octree::clear() {
     }
     totalMass = 0.f;
     centerOfMass = Vector3D(0.f, 0.f, 0.f);
+}
+
+// We override the new operator to manage instances of Octree
+void* Octree::operator new(std::size_t size) {
+    if (!instances.empty()) {
+        const Octree* instance = instances.back();
+        instances.pop_back();
+        return (void*)instance;
+    }
+    return ::operator new(size);
+}
+
+void Octree::operator delete(void* ptr) {
+    instances.push_back(static_cast<const Octree*>(ptr));
+}
+
+// We to a static method to clear all instances for real deallocation
+void Octree::clearInstances() {
+    for (const Octree* instance : instances) {
+        ::operator delete(const_cast<Octree*>(instance));
+    }
+    instances.clear();
 }
 
 // Affichage 3D de l'octree via OpenGL (affiche le volume sous forme de cube fil de fer)

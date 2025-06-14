@@ -4,8 +4,8 @@
 
 using json = nlohmann::json;
 
-APIRest::APIRest(std::vector<Particle>& particles, SimulationSettings& settings, std::atomic<bool>& paused, std::mutex& mtx)
-    : particles(particles), settings(settings), paused(paused), mtx(mtx), running(false) {}
+APIRest::APIRest(Octree& tree, std::vector<Particle>& particles, SimulationSettings& settings, std::atomic<bool>& paused, std::mutex& mtx)
+    : tree(tree), particles(particles), settings(settings), paused(paused), mtx(mtx), running(false) {}
 
 void APIRest::start(int port) {
     running = true;
@@ -77,7 +77,7 @@ void APIRest::start(int port) {
                 if (j.contains("dt")) settings.dt = j["dt"];
                 if (j.contains("nb_particles")) settings.nb_particles = j["nb_particles"];
                 if (j.contains("current_time")) settings.current_time = j["current_time"];
-                // Si on mets à jours le nombre de particules, on réinitialise
+                // Si on mets à jours le nombre de particules, on réinitialise TODO
                 res.status = 200;
             } catch (...) {
                 res.status = 400;
