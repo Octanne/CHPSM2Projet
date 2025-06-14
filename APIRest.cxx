@@ -35,13 +35,34 @@ void APIRest::start(int port) {
             try {
                 auto j = json::parse(req.body);
                 particles.clear();
+                float min_x = std::numeric_limits<float>::max();
+                float min_y = std::numeric_limits<float>::max();
+                float min_z = std::numeric_limits<float>::max();
+                float max_x = std::numeric_limits<float>::lowest();
+                float max_y = std::numeric_limits<float>::lowest();
+                float max_z = std::numeric_limits<float>::lowest();
+
                 for (const auto& jp : j) {
+                    float x = jp.value("x", 0.f);
+                    float y = jp.value("y", 0.f);
+                    float z = jp.value("z", 0.f);
                     particles.emplace_back(
-                        jp.value("x", 0.f), jp.value("y", 0.f), jp.value("z", 0.f),
+                        x, y, z,
                         jp.value("vx", 0.f), jp.value("vy", 0.f), jp.value("vz", 0.f),
                         jp.value("mass", 1.f)
                     );
+                    min_x = std::min(min_x, x);
+                    min_y = std::min(min_y, y);
+                    min_z = std::min(min_z, z);
+                    max_x = std::max(max_x, x);
+                    max_y = std::max(max_y, y);
+                    max_z = std::max(max_z, z);
                 }
+                tree.updateAttributes(
+                    min_x, min_y, min_z,
+                    max_x - min_x, max_y - min_y, max_z - min_z,
+                    1 // Capacity of the octree
+                );
                 res.status = 200;
             } catch (...) {
                 res.status = 400;
@@ -75,9 +96,16 @@ void APIRest::start(int port) {
                 auto j = json::parse(req.body);
                 if (j.contains("t_total")) settings.t_total = j["t_total"];
                 if (j.contains("dt")) settings.dt = j["dt"];
-                if (j.contains("nb_particles")) settings.nb_particles = j["nb_particles"];
+                if (j.contains("nb_particles")) {
+                    settings.nb_particles = j["nb_particles"];
+                    particles.reserve(settings.nb_particles);
+                    for (int i = 0; i < settings.nb_particles; i++) {
+                        particles.push_back(Particle());
+                    }
+                    // Optionnel : ajouter une particule massive au centre pour influencer les autres
+                    particles.push_back(Particle(500.0f, 500.0f, 500.0f, 0.0f, 0.0f, 0.0f, 1e13));
+                }
                 if (j.contains("current_time")) settings.current_time = j["current_time"];
-                // Si on mets à jours le nombre de particules, on réinitialise TODO
                 res.status = 200;
             } catch (...) {
                 res.status = 400;

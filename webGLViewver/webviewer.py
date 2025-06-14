@@ -174,7 +174,7 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.177.0/exampl
 
 let scene, camera, renderer, controls, particlesMesh = null, simBoxHelper = null, paused = false;
 let particlesInterval = null, settingsInterval = null;
-const readonlyFields = ["nb_particles"];
+const readonlyFields = [];
 
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
