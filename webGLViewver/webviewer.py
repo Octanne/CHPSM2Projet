@@ -112,6 +112,13 @@ HTML = """
             display: inline-block;
         }
     </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js"
+            }
+        }
+    </script>
 </head>
 <body>
 <button id="closeBtn" title="Fermer l'application">
@@ -159,64 +166,75 @@ HTML = """
     </form>
 </div>
 <canvas id="scene"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
-<script>
-let scene, camera, renderer, particlesMesh = null;
-let simBoxHelper = null;
-let paused = false;
 
+<script type="module">
+// Import Three.js as ES modules via jsDelivr
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/controls/OrbitControls.js';
+
+let scene, camera, renderer, controls, particlesMesh = null, simBoxHelper = null, paused = false;
+let particlesInterval = null, settingsInterval = null;
 const readonlyFields = ["nb_particles"];
-let particlesInterval = null;
-let settingsInterval = null;
 
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 }
+
 function init() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 5000);
     camera.position.set(1500,1500,1500);
     camera.lookAt(500,500,500);
-    renderer = new THREE.WebGLRenderer({canvas:document.getElementById('scene'), antialias:true});
+
+    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
     resize();
     window.addEventListener('resize', resize);
+
+    // OrbitControls for rotation
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
     animate();
 }
+
 function animate() {
     requestAnimationFrame(animate);
+    controls.update();
     renderer.render(scene, camera);
 }
+
 function updateParticles(particles) {
     if (particlesMesh) scene.remove(particlesMesh);
     const geometry = new THREE.BufferGeometry();
-    const positions = [];
-    for (const p of particles) {
-        positions.push(p.x, p.y, p.z);
-    }
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    const material = new THREE.PointsMaterial({color:0xffff00, size:6});
+    const positions = new Float32Array(particles.length * 3);
+    particles.forEach((p, i) => {
+        positions.set([p.x, p.y, p.z], i * 3);
+    });
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({ color: 0xffff00, size: 6 });
     particlesMesh = new THREE.Points(geometry, material);
     scene.add(particlesMesh);
 }
-function fetchParticles() {
-    fetch('/api/particles').then(r=>r.json()).then(data=>{
-        updateParticles(data);
-    });
-}
+
 function updateSimBox(box) {
     if (!box) return;
     if (simBoxHelper) {
         scene.remove(simBoxHelper);
-        simBoxHelper.geometry.dispose();
-        simBoxHelper.material.dispose();
     }
     const min = new THREE.Vector3(box.MIN_X, box.MIN_Y, box.MIN_Z);
     const max = new THREE.Vector3(box.MAX_X, box.MAX_Y, box.MAX_Z);
     const box3 = new THREE.Box3(min, max);
     simBoxHelper = new THREE.Box3Helper(box3, 0x00fffa);
     scene.add(simBoxHelper);
+}
+
+function fetchParticles() {
+    fetch('/api/particles').then(r=>r.json()).then(data=>{
+        updateParticles(data);
+    });
 }
 function fetchSettings() {
     fetch('/api/settings').then(r=>r.json()).then(data=>{
