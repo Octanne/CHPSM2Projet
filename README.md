@@ -31,6 +31,12 @@
 
 ## Compile, Make, and Run the Compute Server App
 
+0. **Sur romeo:**
+    ```bash
+    spack install patch
+    spack load patch
+    spack install boost@1.86.0 +program_options +chrono +random %aocc
+    ```
 
 1. **Compile the application:**
 

@@ -25,7 +25,7 @@ endif
 
 # Si la cible est 'romeo', on adapte les chemins Boost
 ifneq (,$(filter romeo,$(MAKECMDGOALS)))
-	BOOST_ROOT := $(shell spack location -i boost@1.86.0/2j24j6c)
+	BOOST_ROOT := $(shell spack location -i boost@1.86.0 +program_options +chrono +random %aocc)
 	CXXFLAGS_OPTI += -I$(BOOST_ROOT)/include
 	LDFLAGS_BOOST += -L$(BOOST_ROOT)/lib
 endif
