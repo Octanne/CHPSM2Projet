@@ -1,5 +1,6 @@
 import math
 import json
+import random
 
 # Constants
 G = 6.67430e-11  # gravitational constant (m^3 kg^-1 s^-2)
@@ -7,40 +8,43 @@ sun_mass = 1.0e11  # arbitrary mass unit, like your code
 sun_x = 500.0
 sun_y = 500.0
 
-# Planets data: (radius, mass, angle_deg, name)
+# Planets data: (radius, mass, angle_deg, name, inclination_deg)
 planets_data = [
-    (50.0, 2.0e3,   0.0,   "Mercury"),
-    (80.0, 3.0e3,  30.0,   "Venus"),
-    (120.0, 4.0e3, 60.0,   "Earth"),
-    (160.0, 6.0e3, 120.0,  "Mars"),
-    (250.0, 8.0e3, 180.0,  "Jupiter"),
-    (350.0, 5.0e3, 240.0,  "Saturn"),
-    (420.0, 4.0e3, 300.0,  "Uranus"),
-    (460.0, 4.0e3, 330.0,  "Neptune"),
+    (50.0, 2.0e3,   0.0,   "Mercury", 0.0),
+    (80.0, 3.0e3,  30.0,   "Venus", 3.39),
+    (120.0, 4.0e3, 60.0,   "Earth", 0.0),
+    (160.0, 6.0e3, 120.0,  "Mars", 0.0),
+    (250.0, 8.0e3, 180.0,  "Jupiter", 0.0),
+    (350.0, 5.0e3, 240.0,  "Saturn", 0.0),
+    (420.0, 4.0e3, 300.0,  "Uranus", 0.0),
+    (460.0, 4.0e3, 330.0,  "Neptune", 0.0),
 ]
 
-def add_planet(r, mass, angle_deg, name):
+def add_planet(r, mass, angle_deg, name, inclination_deg):
     angle = math.radians(angle_deg)
+    inclination = math.radians(inclination_deg)
     px = sun_x + r * math.cos(angle)
     py = sun_y + r * math.sin(angle)
-    # Orbital velocity magnitude for circular orbit
+    pz = r * math.sin(inclination)+500.0
+
     v = math.sqrt(G * sun_mass / r)
     vx = -v * math.sin(angle)
     vy =  v * math.cos(angle)
+    vz = 0.0
+
     return {
         "name": name,
         "x": px,
         "y": py,
-        "z": 500.0,
+        "z": pz,
         "vx": vx,
         "vy": vy,
-        "vz": 0.0,
+        "vz": vz,
         "mass": mass
     }
 
 def init_particles():
     particles = []
-    # Add Sun
     particles.append({
         "name": "Sun",
         "x": sun_x,
@@ -51,9 +55,8 @@ def init_particles():
         "vz": 0.0,
         "mass": sun_mass
     })
-    # Add planets
-    for r, mass, angle, name in planets_data:
-        particles.append(add_planet(r, mass, angle, name))
+    for r, mass, angle, name, incl in planets_data:
+        particles.append(add_planet(r, mass, angle, name, incl))
     return particles
 
 if __name__ == "__main__":
