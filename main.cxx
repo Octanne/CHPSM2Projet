@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 
     if (!display) {
         printf("Simulation en mode headless pour %d secondes avec %d particules...\n", static_cast<int>(settings.t_total), N);
-        while (settings.current_time < settings.t_total || settings.t_total == -1) {
+        while ((settings.current_time < settings.t_total || settings.t_total == -1) && !settings.closed) {
             if (!paused) {
                 tree.clear();
                 for (const auto &p : particles) {
@@ -116,11 +116,11 @@ int main(int argc, char *argv[]) {
                 for (auto &p : particles) {
                     updateParticleState(p, tree, settings.dt);
                 }
-                settings.current_time += settings.dt;                
+                settings.current_time += settings.dt;
             }
 
             while (!settings.closed && settings.current_time >= settings.t_total && settings.t_total != -1) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
         }
     }

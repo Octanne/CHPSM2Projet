@@ -440,7 +440,10 @@ document.getElementById('settingsForm').onsubmit = function(e){
     const payload = {};
     if (!readonlyFields.includes("particle_size_input")) {
         const v = document.getElementById('particle_size_input').value;
-        if (v !== "") particleSize = parseFloat(v);
+        if (v !== "") {
+            particleSize = parseFloat(v);
+            document.getElementById('particle_size_input').value = "";
+        }
     }
     if (!readonlyFields.includes("dt")) {
         const v = document.getElementById('dt_input').value;
@@ -464,7 +467,6 @@ document.getElementById('settingsForm').onsubmit = function(e){
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(payload)
     }).then(()=>{
-        document.getElementById('particle_size_input').value = "";
         document.getElementById('dt_input').value = "";
         document.getElementById('t_total_input').value = "";
         document.getElementById('nb_particles_input').value = "";
