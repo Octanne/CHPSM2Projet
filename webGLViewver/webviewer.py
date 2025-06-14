@@ -168,8 +168,8 @@ HTML = """
 <canvas id="scene"></canvas>
 
 <script type="module">
-// Import Three.js as ES modules via jsDelivr
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js';
+// Use importmap: 'three' points to the module bundle
+import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/controls/OrbitControls.js';
 
 let scene, camera, renderer, controls, particlesMesh = null, simBoxHelper = null, paused = false;
@@ -186,7 +186,6 @@ function init() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 5000);
     camera.position.set(1500,1500,1500);
-    camera.lookAt(500,500,500);
 
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
     resize();
@@ -196,6 +195,10 @@ function init() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+
+    // Initial target at origin or will be updated when settings are fetched
+    controls.target.set(0, 0, 0);
+    controls.update();
 
     animate();
 }
@@ -229,6 +232,12 @@ function updateSimBox(box) {
     const box3 = new THREE.Box3(min, max);
     simBoxHelper = new THREE.Box3Helper(box3, 0x00fffa);
     scene.add(simBoxHelper);
+
+    // Re-center controls target to middle of simulation box
+    const center = new THREE.Vector3();
+    box3.getCenter(center);
+    controls.target.copy(center);
+    controls.update();
 }
 
 function fetchParticles() {
@@ -236,6 +245,7 @@ function fetchParticles() {
         updateParticles(data);
     });
 }
+
 function fetchSettings() {
     fetch('/api/settings').then(r=>r.json()).then(data=>{
         document.getElementById('dt_current').textContent = data.dt;
@@ -354,6 +364,7 @@ document.getElementById('closeBtn').onclick = function() {
         });
     }
 };
+// Initialize the scene and fetch initial data
 init();
 fetchSettings();
 fetchParticles();
