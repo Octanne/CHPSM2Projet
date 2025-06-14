@@ -164,7 +164,12 @@ HTML = """
 <div id="overlays-container">
     <div id="overlay">
         <h2>Paramètres Simulation</h2>
-        <form id="settingsForm" autocomplete="off">        
+        <form id="settingsForm" autocomplete="off">      
+            <div class="form-row">
+                <label for="particle_size">particleSize</label>
+                <span class="current-value" id="particle_size_current"></span>
+                <input type="number" step="0.01" name="dt" id="particle_size_input" placeholder="Modifier...">
+            </div>
             <div class="form-row">
                 <label for="nb_particles" id="nb_particles_label">nbParticles</label>
                 <span class="current-value" id="nb_particles_current"></span>
@@ -280,7 +285,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/controls/OrbitControls.js';
 
 let scene, camera, renderer, controls, particlesMesh = null, simBoxHelper = null, paused = false;
-let particlesInterval = null, settingsInterval = null;
+let particlesInterval = null, settingsInterval = null, particleSize = 6;
 const readonlyFields = [];
 
 function resize() {
@@ -321,7 +326,7 @@ function updateParticles(particles) {
         positions.set([p.x, p.y, p.z], i * 3);
     });
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const material = new THREE.PointsMaterial({ color: 0xffff00, size: 6 });
+    const material = new THREE.PointsMaterial({ color: 0xffff00, size: particleSize });
     particlesMesh = new THREE.Points(geometry, material);
     scene.add(particlesMesh);
 }
@@ -351,10 +356,12 @@ function fetchParticles() {
 
 function fetchSettings() {
     fetch('/api/settings').then(r=>r.json()).then(data=>{
+        document.getElementById('particle_size_current').textContent = particleSize;
         document.getElementById('dt_current').textContent = data.dt;
         document.getElementById('t_total_current').textContent = data.t_total;
         document.getElementById('nb_particles_current').textContent = data.nb_particles;
         document.getElementById('current_time_current').textContent = data.current_time;
+        document.getElementById('particle_size_input').placeholder = particleSize;
         document.getElementById('dt_input').placeholder = data.dt;
         document.getElementById('t_total_input').placeholder = data.t_total;
         document.getElementById('nb_particles_input').placeholder = data.nb_particles;
@@ -431,6 +438,10 @@ function updatePauseButton(paused) {
 document.getElementById('settingsForm').onsubmit = function(e){
     e.preventDefault();
     const payload = {};
+    if (!readonlyFields.includes("particle_size_input")) {
+        const v = document.getElementById('particle_size_input').value;
+        if (v !== "") particleSize = parseFloat(v);
+    }
     if (!readonlyFields.includes("dt")) {
         const v = document.getElementById('dt_input').value;
         if (v !== "") payload.dt = parseFloat(v);
@@ -453,6 +464,7 @@ document.getElementById('settingsForm').onsubmit = function(e){
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(payload)
     }).then(()=>{
+        document.getElementById('particle_size_input').value = "";
         document.getElementById('dt_input').value = "";
         document.getElementById('t_total_input').value = "";
         document.getElementById('nb_particles_input').value = "";
