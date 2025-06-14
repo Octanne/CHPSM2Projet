@@ -14,18 +14,20 @@ LDFLAGS_BOOST = -lboost_program_options -lboost_chrono -lboost_random
 # Nom de l'exécutable
 EXEC = bin/main
 
-# Cible par défaut
-ifeq ($(MAKECMDGOALS),headless)
-LDFLAGS_SFML :=
+# Gestion des cibles spéciales et des flags associés
+
+# Si la cible est 'headless', on retire SFML
+ifneq (,$(filter headless,$(MAKECMDGOALS)))
+	LDFLAGS_SFML :=
 else
-CXXFLAGS_OPTI += -DDISPLAY_VERSION=1
+	CXXFLAGS_OPTI += -DDISPLAY_VERSION=1
 endif
 
-# Si romeo
-ifeq ($(MAKECMDGOALS),romeo)
-BOOST_ROOT := $(shell spack location -i boost@1.86.0/2j24j6c)
-CXXFLAGS += -I$(BOOST_ROOT)/include
-LDFLAGS  += -L$(BOOST_ROOT)/lib
+# Si la cible est 'romeo', on adapte les chemins Boost
+ifneq (,$(filter romeo,$(MAKECMDGOALS)))
+	BOOST_ROOT := $(shell spack location -i boost@1.86.0/2j24j6c)
+	CXXFLAGS += -I$(BOOST_ROOT)/include
+	LDFLAGS_BOOST += -L$(BOOST_ROOT)/lib
 endif
 
 all: $(EXEC)
