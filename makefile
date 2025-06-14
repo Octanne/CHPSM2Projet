@@ -15,7 +15,14 @@ LDFLAGS_BOOST = -lboost_program_options -lboost_chrono -lboost_random
 EXEC = bin/main
 
 # Cible par défaut
+ifeq ($(MAKECMDGOALS),headless)
+LDFLAGS_SFML :=
+else
+CXXFLAGS_OPTI += -DDISPLAY_VERSION=1
+endif
+
 all: $(EXEC)
+headless: $(EXEC)
 
 # Création de l'exécutable
 $(EXEC): main.cxx obj/Particle.o obj/Octree.o obj/MyRNG.o obj/APIRest.o

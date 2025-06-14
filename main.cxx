@@ -9,7 +9,10 @@
 #include <atomic>
 
 #include <omp.h>
+
 // SFML et OpenGL
+#ifdef DISPLAY_VERSION
+
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 
@@ -18,6 +21,8 @@
 #include <OpenGL/glu.h>
 #else
 #include <GL/glu.h>
+#endif
+
 #endif
 
 // Inclusion de la structure Vector3D et Particle
@@ -57,13 +62,15 @@ int main(int argc, char *argv[]) {
     bool drawOctreeBorders;
     float simulMaxTime;
     int portAPI;
+    bool pausedD;
     po::options_description desc("Options autorisées");
     desc.add_options()
         ("help,h", "affiche ce message d'aide")
         ("port-api", po::value<int>(&portAPI)->default_value(8080), "port du serveur API REST")
         ("particles", po::value<int>(&N)->required(), "nombre de particules")
-        ("simulTime", po::value<float>(&simulMaxTime)->default_value(50.0f), "pas de fin de simulation (0 pour infini)")
-        ("display", po::value<bool>(&display)->default_value(true), "mode affichage (true/false)")
+        ("pausedAtStart", po::value<bool>(&pausedD)->default_value(false), "simulation en pause au démarrage (true/false)")
+        ("simulTime", po::value<float>(&simulMaxTime)->default_value(50.0f), "pas de fin de simulation")
+        ("display", po::value<bool>(&display)->default_value(false), "fenètre d'affichage SFML (true/false)")
         ("drawOctreeBorders", po::value<bool>(&drawOctreeBorders)->default_value(true), "afficher les bords de l'octree (true/false)");
     po::positional_options_description p;
     p.add("particles", 1).add("display", 1).add("drawOctreeBorders", 1);
@@ -89,7 +96,7 @@ int main(int argc, char *argv[]) {
                                 static_cast<int>(Y_MAX), static_cast<int>(X_MAX), static_cast<int>(Z_MAX),
                                 static_cast<int>(Y_MIN), static_cast<int>(X_MIN), static_cast<int>(Z_MIN)};
     std::mutex mtx;
-    std::atomic<bool> paused(false);
+    std::atomic<bool> paused(pausedD);
     std::atomic<bool> closed(false);
 
     // Initialisation de l'octree
@@ -99,7 +106,30 @@ int main(int argc, char *argv[]) {
     APIRest api(tree, particles, settings, paused, mtx);
     api.start(portAPI);
 
-    if (display) {
+    if (!display) {
+        printf("Simulation en mode headless pour %d secondes avec %d particules...\n", static_cast<int>(settings.t_total), N);
+        while (settings.current_time < settings.t_total) {
+            if (!paused) {
+                tree.clear();
+                for (const auto &p : particles) {
+                    tree.insert(&p);
+                }
+                #pragma omp parallel for 
+                for (auto &p : particles) {
+                    updateParticleState(p, tree, settings.dt);
+                }
+                settings.current_time += settings.dt;                
+            }
+
+            while (!settings.closed && settings.current_time >= settings.t_total) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            }
+        }
+    }
+
+    #ifdef DISPLAY_VERSION
+
+    else {
         // Création d'une fenêtre SFML avec contexte OpenGL
         sf::Window window(sf::VideoMode(1000, 1000), "Simulation Particules 3D et Octree", sf::Style::Close, sf::ContextSettings(24));
         window.setVerticalSyncEnabled(true);
@@ -209,26 +239,10 @@ int main(int argc, char *argv[]) {
             window.display();
             sf::sleep(sf::milliseconds(10));
         }
-    } else {
-        printf("Simulation en mode headless pour %d secondes avec %d particules...\n", static_cast<int>(settings.t_total), N);
-        while (settings.current_time < settings.t_total) {
-            if (!paused) {
-                tree.clear();
-                for (const auto &p : particles) {
-                    tree.insert(&p);
-                }
-                #pragma omp parallel for 
-                for (auto &p : particles) {
-                    updateParticleState(p, tree, settings.dt);
-                }
-                settings.current_time += settings.dt;                
-            }
-
-            while (!settings.closed && settings.current_time >= settings.t_total) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(250));
-            }
-        }
     }
+
+    #endif
+
     api.stop();
     // Nettoyage de l'octree
     Octree::clearInstances();

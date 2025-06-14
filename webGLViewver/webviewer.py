@@ -25,6 +25,28 @@ HTML = """
             position:fixed; top:20px; left:20px; background:rgba(34,40,49,0.97);
             padding:22px 28px 18px 28px; border-radius:12px; box-shadow:0 4px 24px #0008;
             min-width: 320px;
+            z-index: 1000;
+        }
+        #overlay2 {
+            position:fixed; top:calc(20px + 100% + 20px); left:20px; background:rgba(34,40,49,0.97);
+            padding:22px 28px 18px 28px; border-radius:12px; box-shadow:0 4px 24px #0008;
+            min-width: 320px;
+            z-index: 1000;
+            padding-bottom: 0px;
+        }
+        /* Stack overlays vertically on the left */
+        #overlays-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+        #overlay, #overlay2 {
+            position: static;
+            margin: 0;
         }
         h2 { 
             margin:0 0 12px 0; 
@@ -68,9 +90,19 @@ HTML = """
             vertical-align: middle;
         }
         #pauseBtn {
-            min-width: 146px;
+            min-width: 150px;
             justify-content: center;
         }
+        #updateBtn {
+            min-width: 170px;
+            justify-content: center;
+        }
+        
+        #downloadParticlesBtn, #uploadParticlesBtn {
+            cursor: pointer;
+            justify-content: center;
+        }
+        
         #pauseBtnText {
             display: inline-block;
             min-width: 70px;
@@ -111,6 +143,20 @@ HTML = """
             font-weight: 600;
             display: inline-block;
         }
+        /* Ajout pour aligner les boutons Sauver et Envoyer sur la même ligne et les centrer */
+        .particles-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center; /* <-- Ajouté pour centrer horizontalement */
+            width: 100%;
+        }
+        #uploadParticlesStatus {
+            width: 100%;
+            text-align: center;
+            margin: 4px;
+            color: #ffd369;
+        }
     </style>
     <script type="importmap">
         {
@@ -124,46 +170,126 @@ HTML = """
 <button id="closeBtn" title="Fermer l'application">
     <span id="closeBtnText">Fermer</span>
 </button>
-<div id="overlay">
-    <h2>Paramètres Simulation</h2>
-    <form id="settingsForm" autocomplete="off">        
-        <div class="form-row">
-            <label for="nb_particles" id="nb_particles_label">nbParticles</label>
-            <span class="current-value" id="nb_particles_current"></span>
-            <input type="number" name="nb_particles" id="nb_particles_input" placeholder="Modifier...">
-        </div>
-        <div class="form-row">
-            <label for="current_time">currentTime</label>
-            <span class="current-value" id="current_time_current"></span>
-            <input type="number" step="0.1" name="current_time" id="current_time_input" placeholder="Modifier...">
-        </div> 
-        <div class="form-row">
-            <label for="t_total">maxTime</label>
-            <span class="current-value" id="t_total_current"></span>
-            <input type="number" step="0.1" name="t_total" id="t_total_input" placeholder="Modifier...">
-        </div>       
-        <div class="form-row">
-            <label for="dt">deltaTime</label>
-            <span class="current-value" id="dt_current"></span>
-            <input type="number" step="0.01" name="dt" id="dt_input" placeholder="Modifier...">
-        </div>
+<div id="overlays-container">
+    <div id="overlay">
+        <h2>Paramètres Simulation</h2>
+        <form id="settingsForm" autocomplete="off">        
+            <div class="form-row">
+                <label for="nb_particles" id="nb_particles_label">nbParticles</label>
+                <span class="current-value" id="nb_particles_current"></span>
+                <input type="number" name="nb_particles" id="nb_particles_input" placeholder="Modifier...">
+            </div>
+            <div class="form-row">
+                <label for="current_time">currentTime</label>
+                <span class="current-value" id="current_time_current"></span>
+                <input type="number" step="0.1" name="current_time" id="current_time_input" placeholder="Modifier...">
+            </div> 
+            <div class="form-row">
+                <label for="t_total">maxTime</label>
+                <span class="current-value" id="t_total_current"></span>
+                <input type="number" step="0.1" name="t_total" id="t_total_input" placeholder="Modifier...">
+            </div>       
+            <div class="form-row">
+                <label for="dt">deltaTime</label>
+                <span class="current-value" id="dt_current"></span>
+                <input type="number" step="0.01" name="dt" id="dt_input" placeholder="Modifier...">
+            </div>
 
-        <div class="form-actions">
-            <button type="submit">
-                <span class="icon" id="updateIcon">
-                    <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
-                        <path d="M10 2a8 8 0 1 1-7.446 5.032l1.857.742A6 6 0 1 0 10 4V2z"/>
-                        <polygon points="2,2 6,2 6,6" fill="#23272f"/>
+            <div class="form-actions">
+                <button type="submit" id="updateBtn">
+                    <span class="icon" id="updateIcon">
+                        <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
+                            <path d="M10 2a8 8 0 1 1-7.446 5.032l1.857.742A6 6 0 1 0 10 4V2z"/>
+                            <polygon points="2,2 6,2 6,6" fill="#23272f"/>
+                        </svg>
+                    </span>
+                    Mettre à jour
+                </button>
+                <button type="button" id="pauseBtn">
+                    <span id="pauseIcon" class="icon"></span>
+                    <span id="pauseBtnText"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+    <div id="overlay2">
+        <h2>Gestion Particles</h2>
+        <div class="particles-actions-row">
+            <button id="downloadParticlesBtn" type="button">
+                <span class="icon">
+                    <!-- Icône Sauver (Download) -->
+                    <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 2v10m0 0l-4-4m4 4l4-4" stroke="#23272f" stroke-width="2" fill="none"/>
+                        <rect x="4" y="16" width="12" height="2" rx="1" fill="#23272f"/>
                     </svg>
                 </span>
-                Mettre à jour
+                Sauvegarder
             </button>
-            <button type="button" id="pauseBtn">
-                <span id="pauseIcon" class="icon"></span>
-                <span id="pauseBtnText"></span>
+            <input type="file" id="uploadParticlesInput" accept=".json" style="display:none;">
+            <button id="uploadParticlesBtn" type="button" id="sendBtn">
+                <span class="icon">
+                    <!-- Icône Envoyer (Upload) -->
+                    <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 18V8m0 0l-4 4m4-4l4 4" stroke="#23272f" stroke-width="2" fill="none"/>
+                        <rect x="4" y="4" width="12" height="2" rx="1" fill="#23272f"/>
+                    </svg>
+                </span>
+                Envoyer
             </button>
         </div>
-    </form>
+        <div id="uploadParticlesStatus">&nbsp;</div>
+        <script>
+        // Download particles as JSON
+        document.getElementById('downloadParticlesBtn').onclick = function() {
+            fetch('/api/particles').then(r => r.json()).then(data => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "particles.json";
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            });
+        };
+
+        // Upload particles JSON
+        document.getElementById('uploadParticlesBtn').onclick = function() {
+            document.getElementById('uploadParticlesInput').click();
+        };
+        document.getElementById('uploadParticlesInput').onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const json = JSON.parse(evt.target.result);
+                    fetch('/api/particles', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(json)
+                    }).then(resp => {
+                        if (resp.ok) {
+                            document.getElementById('uploadParticlesStatus').textContent = "Import réussi";
+                            fetchParticles();
+                        } else {
+                            document.getElementById('uploadParticlesStatus').textContent = "Erreur lors de l'import";
+                        }
+                        setTimeout(() => document.getElementById('uploadParticlesStatus').innerHTML = "&nbsp;", 3000);
+                    });
+                } catch (err) {
+                    document.getElementById('uploadParticlesStatus').textContent = "Fichier invalide";
+                    setTimeout(() => document.getElementById('uploadParticlesStatus').innerHTML = "&nbsp;", 3000);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = "";
+        };
+        </script>
+    </div>
 </div>
 <canvas id="scene"></canvas>
 
@@ -379,10 +505,15 @@ settingsInterval = setInterval(fetchSettings, 1000);
 def index():
     return render_template_string(HTML)
 
-@app.route("/api/particles")
+@app.route("/api/particles", methods=["GET", "POST"])
 def api_particles():
-    r = requests.get(f"{API_URL}/particles")
-    return jsonify(r.json())
+    if request.method == "POST":
+        data = request.json
+        requests.post(f"{API_URL}/particles", json=data)
+        return "", 204
+    else:
+        r = requests.get(f"{API_URL}/particles")
+        return jsonify(r.json())
 
 @app.route("/api/settings", methods=["GET", "POST"])
 def api_settings():

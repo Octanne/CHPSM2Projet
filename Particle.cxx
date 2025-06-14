@@ -2,10 +2,14 @@
 #include "Particle.hpp"
 
 // Pour OpenGL sur macOS ou autres
+#ifdef DISPLAY_VERSION
+
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
 #else
 #include <GL/glu.h>
+#endif
+
 #endif
 
 #include "MyRNG.hpp"
@@ -65,6 +69,7 @@ void Particle::checkBoundary() {
 
 // Affichage 3D via OpenGL
 void Particle::drawGL() const {
+    #ifdef DISPLAY_VERSION
     // Tracé de l'historique (ligne brisée en gris)
     glColor3f(0.5f, 0.5f, 0.5f);
     glBegin(GL_LINE_STRIP);
@@ -78,6 +83,7 @@ void Particle::drawGL() const {
     glBegin(GL_POINTS);
         glVertex3f(position.x, position.y, position.z);
     glEnd();
+    #endif
 }
 
 int Particle::id_counter = 0;

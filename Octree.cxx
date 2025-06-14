@@ -1,10 +1,14 @@
 #include "Octree.hpp"
 
 // Pour OpenGL sur macOS ou autres
+#ifdef DISPLAY_VERSION
+
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
 #else
 #include <GL/glu.h>
+#endif
+
 #endif
 
 #include <cmath>
@@ -194,6 +198,7 @@ void Octree::clearInstances() {
 
 // Affichage 3D de l'octree via OpenGL (affiche le volume sous forme de cube fil de fer)
 void Octree::drawGL() const {
+    #ifdef DISPLAY_VERSION
     glColor3f(0.f, 0.f, 1.f);
     float x0 = x, y0 = y, z0 = z;
     float x1 = x + width, y1 = y + height, z1 = z + depth;
@@ -221,4 +226,5 @@ void Octree::drawGL() const {
                 children[i]->drawGL();
         }
     }
+    #endif // DISPLAY_VERSION
 }

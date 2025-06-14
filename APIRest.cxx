@@ -34,6 +34,7 @@ void APIRest::start(int port) {
             std::lock_guard<std::mutex> lock(mtx);
             try {
                 auto j = json::parse(req.body);
+                printf("Received particles data: %s\n", j.dump().c_str());
                 particles.clear();
                 float min_x = std::numeric_limits<float>::max();
                 float min_y = std::numeric_limits<float>::max();
@@ -63,6 +64,14 @@ void APIRest::start(int port) {
                     max_x - min_x, max_y - min_y, max_z - min_z,
                     1 // Capacity of the octree
                 );
+                settings.nb_particles = particles.size();
+                settings.MIN_X = static_cast<int>(min_x);
+                settings.MIN_Y = static_cast<int>(min_y);
+                settings.MIN_Z = static_cast<int>(min_z);
+                settings.MAX_X = static_cast<int>(max_x);
+                settings.MAX_Y = static_cast<int>(max_y);
+                settings.MAX_Z = static_cast<int>(max_z);
+                settings.current_time = 0.f; // Reset current time
                 res.status = 200;
             } catch (...) {
                 res.status = 400;
@@ -99,6 +108,7 @@ void APIRest::start(int port) {
                 if (j.contains("nb_particles")) {
                     settings.nb_particles = j["nb_particles"];
                     particles.reserve(settings.nb_particles);
+                    particles.clear();
                     for (int i = 0; i < settings.nb_particles; i++) {
                         particles.push_back(Particle());
                     }
