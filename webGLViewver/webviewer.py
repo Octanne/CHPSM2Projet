@@ -1,9 +1,17 @@
 from flask import Flask, render_template_string, request, jsonify
 import requests
+import logging
+import os
+import argparse
+import threading
 
 app = Flask(__name__)
 
 API_URL = "http://localhost:8080"
+parser = argparse.ArgumentParser()
+parser.add_argument("api_url", nargs="?", default="http://localhost:8080", help="URL of the API backend")
+args, unknown = parser.parse_known_args()
+API_URL = args.api_url
 
 HTML = """
 <!DOCTYPE html>
@@ -107,12 +115,6 @@ HTML = """
 </head>
 <body>
 <button id="closeBtn" title="Fermer l'application">
-    <span class="icon">
-        <svg viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg">
-            <line x1="5" y1="5" x2="15" y2="15" stroke="#fff" stroke-width="2"/>
-            <line x1="15" y1="5" x2="5" y2="15" stroke="#fff" stroke-width="2"/>
-        </svg>
-    </span>
     <span id="closeBtnText">Fermer</span>
 </button>
 <div id="overlay">
@@ -164,6 +166,8 @@ let simBoxHelper = null;
 let paused = false;
 
 const readonlyFields = ["nb_particles"];
+let particlesInterval = null;
+let settingsInterval = null;
 
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -253,6 +257,25 @@ function fetchSettings() {
         }
         paused = data.paused;
         updatePauseButton(paused);
+
+        // Disable or enable intervals based on paused state
+        if (paused) {
+            if (particlesInterval) {
+                clearInterval(particlesInterval);
+                particlesInterval = null;
+            }
+            if (settingsInterval) {
+                clearInterval(settingsInterval);
+                settingsInterval = null;
+            }
+        } else {
+            if (!particlesInterval) {
+                particlesInterval = setInterval(fetchParticles, 200);
+            }
+            if (!settingsInterval) {
+                settingsInterval = setInterval(fetchSettings, 1000);
+            }
+        }
     });
 }
 
@@ -305,6 +328,9 @@ document.getElementById('pauseBtn').onclick = function(){
 };
 document.getElementById('closeBtn').onclick = function() {
     if (confirm("Voulez-vous vraiment fermer l'application ?")) {
+        // Stop intervals when closing
+        if (particlesInterval) clearInterval(particlesInterval);
+        if (settingsInterval) clearInterval(settingsInterval);
         fetch('/api/stop', {method:'POST'}).then(()=>{
             document.body.innerHTML = "<h2 style='color:#fff;text-align:center;margin-top:20vh;'>Application arrêtée.</h2>";
         });
@@ -313,8 +339,8 @@ document.getElementById('closeBtn').onclick = function() {
 init();
 fetchSettings();
 fetchParticles();
-setInterval(fetchParticles, 200);
-setInterval(fetchSettings, 1000);
+particlesInterval = setInterval(fetchParticles, 200);
+settingsInterval = setInterval(fetchSettings, 1000);
 </script>
 </body>
 </html>
@@ -346,11 +372,13 @@ def api_pause():
 
 @app.route("/api/stop", methods=["POST"])
 def api_stop():
-    # Arrête proprement le serveur Flask
-    request.post(f"{API_URL}/stop")
-    shutdown = request.environ.get('werkzeug.server.shutdown')
-    if shutdown is not None:
-        shutdown()
+    # On envoie un requete POST pour arrêter le serveur de simulation
+    requests.post(f"{API_URL}/stop")
+    # We wait for the request to be processed
+    # On ferme l'application Flask apres reception de la requete
+    # Note: os._exit(0) is used to forcefully terminate the Flask app
+    # without waiting for any ongoing requests to complete.
+    threading.Timer(1.0, lambda: os._exit(0)).start()
     return "", 204
 
 @app.route("/api/resume", methods=["POST"])
@@ -359,4 +387,20 @@ def api_resume():
     return "", 204
 
 if __name__ == "__main__":
+    class No200Filter(logging.Filter):
+        def filter(self, record):
+            # Werkzeug logs look like: "127.0.0.1 - - [date] "GET / HTTP/1.1" 200 -"
+            # Only filter out if status code is 200 or 204
+            msg = record.getMessage()
+            if '"' in msg:
+                try:
+                    status_code = int(msg.split('"')[2].strip().split()[0])
+                    return status_code != 200 and status_code != 204
+                except Exception:
+                    return True
+            return True
+
+    log = logging.getLogger('werkzeug')
+    log.addFilter(No200Filter())
+
     app.run(port=5000, debug=True)
