@@ -10,8 +10,14 @@ app = Flask(__name__)
 API_URL = "http://localhost:8080"
 parser = argparse.ArgumentParser()
 parser.add_argument("api_url", nargs="?", default="http://localhost:8080", help="URL of the API backend")
+parser.add_argument("--port", type=int, default=5000, help="Port to run the Flask app on")
+parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to run the Flask app on")
+parser.add_argument("--debug", action="store_true", help="Run Flask app in debug mode")
 args, unknown = parser.parse_known_args()
 API_URL = args.api_url
+portConf = args.port
+hostConf = args.host
+debugConf = args.debug
 
 HTML = """
 <!DOCTYPE html>
@@ -630,4 +636,4 @@ if __name__ == "__main__":
     log = logging.getLogger('werkzeug')
     log.addFilter(No200Filter())
 
-    app.run(port=5000, host="0.0.0.0", debug=True)
+    app.run(port=portConf, host=hostConf, debug=debugConf)
