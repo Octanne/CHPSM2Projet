@@ -272,54 +272,6 @@ HTML = """
             </button>
         </div>
         <div id="uploadParticlesStatus">&nbsp;</div>
-        <script>
-        document.getElementById('downloadParticlesBtn').onclick = function() {
-            fetch('/api/particles').then(r => r.json()).then(data => {
-                const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "particles.json";
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
-            });
-        };
-        document.getElementById('uploadParticlesBtn').onclick = function() {
-            document.getElementById('uploadParticlesInput').click();
-        };
-        document.getElementById('uploadParticlesInput').onchange = function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const json = JSON.parse(evt.target.result);
-                    fetch('/api/particles', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(json)
-                    }).then(resp => {
-                        if (resp.ok) {
-                            document.getElementById('uploadParticlesStatus').textContent = "Import réussi";
-                            fetchParticles();
-                        } else {
-                            document.getElementById('uploadParticlesStatus').textContent = "Erreur lors de l'import";
-                        }
-                        setTimeout(() => document.getElementById('uploadParticlesStatus').innerHTML = "&nbsp;", 3000);
-                    });
-                } catch (err) {
-                    document.getElementById('uploadParticlesStatus').textContent = "Fichier invalide";
-                    setTimeout(() => document.getElementById('uploadParticlesStatus').innerHTML = "&nbsp;", 3000);
-                }
-            };
-            reader.readAsText(file);
-            e.target.value = "";
-        };
-        </script>
     </div>
 </div>
 <canvas id="scene"></canvas>
@@ -339,7 +291,7 @@ function resize() {
 
 function init() {
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 5000);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 20000);
     camera.position.set(1500,1500,1500);
 
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
@@ -532,6 +484,7 @@ document.getElementById('boxForm').onsubmit = function(e){
 document.getElementById('pauseBtn').onclick = function(){
     fetch(paused ? '/api/resume' : '/api/pause', {method:'POST'}).then(()=>fetchSettings());
 };
+
 document.getElementById('closeBtn').onclick = function() {
     if (confirm("Voulez-vous vraiment fermer l'application ?")) {
         if (particlesInterval) clearInterval(particlesInterval);
@@ -541,6 +494,56 @@ document.getElementById('closeBtn').onclick = function() {
         });
     }
 };
+
+document.getElementById('downloadParticlesBtn').onclick = function() {
+    fetch('/api/particles').then(r => r.json()).then(data => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "particles.json";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+    });
+};
+
+document.getElementById('uploadParticlesBtn').onclick = function() {
+    document.getElementById('uploadParticlesInput').click();
+};
+
+document.getElementById('uploadParticlesInput').onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            const json = JSON.parse(evt.target.result);
+            fetch('/api/particles', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(json)
+            }).then(resp => {
+                if (resp.ok) {
+                    document.getElementById('uploadParticlesStatus').textContent = "Import réussi";
+                    fetchParticles();
+                } else {
+                    document.getElementById('uploadParticlesStatus').textContent = "Erreur lors de l'import";
+                }
+                setTimeout(() => document.getElementById('uploadParticlesStatus').innerHTML = "&nbsp;", 3000);
+            });
+        } catch (err) {
+            document.getElementById('uploadParticlesStatus').textContent = "Fichier invalide";
+            setTimeout(() => document.getElementById('uploadParticlesStatus').innerHTML = "&nbsp;", 3000);
+        }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+};
+
 init();
 fetchSettings();
 fetchParticles();

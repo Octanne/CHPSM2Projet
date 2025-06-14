@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
         ("port-api", po::value<int>(&portAPI)->default_value(8080), "port du serveur API REST")
         ("particles", po::value<int>(&N)->required(), "nombre de particules")
         ("pausedAtStart", po::value<bool>(&pausedD)->default_value(false), "simulation en pause au démarrage (true/false)")
-        ("simulTime", po::value<float>(&simulMaxTime)->default_value(50.0f), "pas de fin de simulation")
+        ("simulTime", po::value<float>(&simulMaxTime)->default_value(50.0f), "durée de la simulation en secondes (-1 pour infini)")
         ("display", po::value<bool>(&display)->default_value(false), "fenètre d'affichage SFML (true/false)")
         ("drawOctreeBorders", po::value<bool>(&drawOctreeBorders)->default_value(true), "afficher les bords de l'octree (true/false)");
     po::positional_options_description p;
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 
     if (!display) {
         printf("Simulation en mode headless pour %d secondes avec %d particules...\n", static_cast<int>(settings.t_total), N);
-        while (settings.current_time < settings.t_total) {
+        while (settings.current_time < settings.t_total || settings.t_total == -1) {
             if (!paused) {
                 tree.clear();
                 for (const auto &p : particles) {
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
                 settings.current_time += settings.dt;                
             }
 
-            while (!settings.closed && settings.current_time >= settings.t_total) {
+            while (!settings.closed && settings.current_time >= settings.t_total && settings.t_total != -1) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(250));
             }
         }
