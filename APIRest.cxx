@@ -97,6 +97,11 @@ void APIRest::start(int port) {
                 settings.MAX_Y = origin_y + cube_size;
                 settings.MAX_Z = origin_z + cube_size;
                 settings.current_time = 0.f;
+                // We update Max Min 
+                MyRNG::updateMaxMin(
+                        settings.MIN_X, settings.MAX_X, settings.MIN_Y, 
+                        settings.MAX_Y, settings.MIN_Z, settings.MAX_Z
+                );
                 paused = true;
                 res.status = 200;
 

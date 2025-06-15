@@ -404,7 +404,7 @@ button:hover {
 }
 
 #toggleScaleBtn {
-    min-width: 110px;
+    min-width: 151px;
     justify-content: center;
     background: #ffd369;
     color: #23272f;
@@ -414,7 +414,6 @@ button:hover {
     font-weight: 600;
     font-size: 1em;
     cursor: pointer;
-    margin-top: 6px;
     transition: background 0.2s;
 }
 
@@ -429,6 +428,14 @@ button:hover {
     display: inline-block;
 }
 
+#toggleScaleBtn .icon {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
 .hide-gui #bottomright-overlays-container,
 .hide-gui #overlays-container,
 .hide-gui #overlay-timeline {
@@ -439,6 +446,7 @@ button:hover {
     background: #393e46;
     color: #ffd369;
     border: none;
+    min-width: 135px;
     border-radius: 4px;
     padding: 7px 18px;
     font-weight: 600;
@@ -447,6 +455,7 @@ button:hover {
     transition: background 0.2s;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
 }
 

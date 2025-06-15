@@ -6,6 +6,7 @@ let particlesInterval = null, settingsInterval = null, particleSize = 5;
 let dontUpdateWhenPaused = false; // Set to true if you want to stop updates when paused
 let particleAsMesh = true; // Use mesh for particles instead of points
 let particleColor = 0xffff00; // Default color
+let scaleEnabled = false; // Toggle for scale application
 
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -55,11 +56,16 @@ function updateParticles(particles) {
     if (particlesMeshses) {
         particlesMeshses.forEach(mesh => scene.remove(mesh));
     }
+    // Appliquer l'échelle si activée
+    let displayParticles = scaleEnabled
+        ? particles.map(applyScaleToParticle)
+        : particles;
+
     if (particleAsMesh) {
         particlesMeshses = [];
         const sphereGeometry = new THREE.SphereGeometry(particleSize, 16, 16);
         const sphereMaterial = new THREE.MeshStandardMaterial({ color: particleColor });
-        particles.forEach(p => {
+        displayParticles.forEach(p => {
             const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
             mesh.position.set(p.x, p.y, p.z);
             particlesMeshses.push(mesh);
@@ -67,8 +73,8 @@ function updateParticles(particles) {
         });
     } else {
         const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particles.length * 3);
-        particles.forEach((p, i) => {
+        const positions = new Float32Array(displayParticles.length * 3);
+        displayParticles.forEach((p, i) => {
             positions.set([p.x, p.y, p.z], i * 3);
         });
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -358,6 +364,91 @@ document.getElementById('renderForm').onsubmit = function(e) {
         }
     }
 };
+
+// --- Gestion de l'échelle (scale) ---
+let scaleParams = {
+    xMin: 0, xMax: 1000,
+    yMin: 0, yMax: 1000,
+    zMin: 0, zMax: 1000
+};
+
+function applyScaleToParticle(p) {
+    if (!scaleEnabled) return p;
+    let np = { ...p };
+    if (scaleParams.xMin !== null && scaleParams.xMax !== null) {
+        np.x = (np.x - scaleParams.xMin) / (scaleParams.xMax - scaleParams.xMin) * 1000 - 500;
+    }
+    if (scaleParams.yMin !== null && scaleParams.yMax !== null) {
+        np.y = (np.y - scaleParams.yMin) / (scaleParams.yMax - scaleParams.yMin) * 1000 - 500;
+    }
+    if (scaleParams.zMin !== null && scaleParams.zMax !== null) {
+        np.z = (np.z - scaleParams.zMin) / (scaleParams.zMax - scaleParams.zMin) * 1000 - 500;
+    }
+    return np;
+}
+
+const toggleScaleBtn = document.getElementById('toggleScaleBtn');
+const scaleXMinInput = document.getElementById('scale_x_min');
+const scaleXMaxInput = document.getElementById('scale_x_max');
+const scaleYMinInput = document.getElementById('scale_y_min');
+const scaleYMaxInput = document.getElementById('scale_y_max');
+const scaleZMinInput = document.getElementById('scale_z_min');
+const scaleZMaxInput = document.getElementById('scale_z_max');
+const scaleForm = document.getElementById('scaleForm');
+const updateScaleBtn = document.getElementById('updateScaleBtn');
+
+toggleScaleBtn.onclick = function() {
+    scaleEnabled = !scaleEnabled;
+    updateScaleOverlayInputs();
+    fetchParticles();
+};
+
+function updateScaleOverlayInputs() {
+    scaleXMinInput.value = scaleParams.xMin !== null ? scaleParams.xMin : '';
+    scaleXMaxInput.value = scaleParams.xMax !== null ? scaleParams.xMax : '';
+    scaleYMinInput.value = scaleParams.yMin !== null ? scaleParams.yMin : '';
+    scaleYMaxInput.value = scaleParams.yMax !== null ? scaleParams.yMax : '';
+    scaleZMinInput.value = scaleParams.zMin !== null ? scaleParams.zMin : '';
+    scaleZMaxInput.value = scaleParams.zMax !== null ? scaleParams.zMax : '';
+    // Ajout de l'icône dynamique
+    if (scaleEnabled) {
+        toggleScaleBtn.innerHTML = `<span class="icon">
+            <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg">
+                <line x1="5" y1="5" x2="15" y2="15" stroke="#23272f" stroke-width="2"/>
+                <line x1="15" y1="5" x2="5" y2="15" stroke="#23272f" stroke-width="2"/>
+            </svg>
+        </span><span id="toggleScaleBtnText">Désactiver</span>`;
+    } else {
+        toggleScaleBtn.innerHTML = `<span class="icon">
+            <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg">
+                <polyline points="5,11 9,15 15,5" stroke="#23272f" stroke-width="2" fill="none"/>
+            </svg>
+        </span><span id="toggleScaleBtnText">Activer</span>`;
+    }
+}
+
+function updateScaleFactorValues(e) {
+    if (e) e.preventDefault();
+    scaleParams.xMin = scaleXMinInput.value !== "" ? parseFloat(scaleXMinInput.value) : 0;
+    scaleParams.xMax = scaleXMaxInput.value !== "" ? parseFloat(scaleXMaxInput.value) : 1000;
+    scaleParams.yMin = scaleYMinInput.value !== "" ? parseFloat(scaleYMinInput.value) : 0;
+    scaleParams.yMax = scaleYMaxInput.value !== "" ? parseFloat(scaleYMaxInput.value) : 1000;
+    scaleParams.zMin = scaleZMinInput.value !== "" ? parseFloat(scaleZMinInput.value) : 0;
+    scaleParams.zMax = scaleZMaxInput.value !== "" ? parseFloat(scaleZMaxInput.value) : 1000;
+    updateScaleOverlayInputs();
+    fetchParticles();
+    console.log("Nouveau facteur d'échelle appliqué :", scaleParams);
+}
+
+// Correction : utiliser addEventListener pour onsubmit
+scaleForm.onsubmit = function(e) {
+    e.preventDefault();
+    updateScaleFactorValues();
+}
+updateScaleBtn.onclick = updateScaleFactorValues;
+
+// Initialisation des valeurs d'échelle à l'ouverture
+updateScaleOverlayInputs();
 
 // Initialize the application
 init();
