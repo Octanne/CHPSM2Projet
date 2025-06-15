@@ -2,6 +2,11 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" href="includes/ico.png" type="image/png">
+    <meta name="description" content="Visualisation 3D de la simulation N-Body avec gestion des particules et des paramètres de simulation.">
+    <meta name="keywords" content="N-Body, simulation, 3D, visualisation, particules, paramètres, WebGL">
+    <meta name="author" content="Corentin Levalet and Simao Cortinhal, M2 S10 Projet CHPS1005">
     <title>Visualisation N-Body 3D</title>
     <link rel="stylesheet" href="includes/styles.css">
 </head>
@@ -153,7 +158,7 @@
                 <div class="form-row">
                     <label for="render_update_paused">UpOnPause</label>
                     <span class="current-value" id="render_update_paused_current"></span>
-                    <label class="switch">
+                    <label class="switch" alt="Mettre à jour le rendu lors de la pause">
                         <input type="checkbox" id="render_update_paused" name="render_update_paused">
                         <span class="slider"></span>
                     </label>
@@ -196,7 +201,7 @@
                     <button type="button" id="toggleScaleBtn">
                         <span id="toggleScaleBtnText">Activer</span>
                     </button>
-                    <button type="button" id="updateScaleBtn">
+                    <button type="submit" id="updateScaleBtn">
                         <span class="icon">
                             <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
                                 <path d="M10 2a8 8 0 1 1-7.446 5.032l1.857.742A6 6 0 1 0 10 4V2z"/>

@@ -28,7 +28,8 @@ def includes_files(namefile):
     ALLOWED_INCLUDE_FILES = [
         "scripts.js",
         "importmap.json",
-        "styles.css"
+        "styles.css",
+        "ico.png"
     ]
     includes_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "includes")
     if namefile in ALLOWED_INCLUDE_FILES:

@@ -7,6 +7,16 @@ let dontUpdateWhenPaused = false; // Set to true if you want to stop updates whe
 let particleAsMesh = true; // Use mesh for particles instead of points
 let particleColor = 0xffff00; // Default color
 let scaleEnabled = false; // Toggle for scale application
+let scaleParams = {
+    xMin: 0, xMax: 1000,
+    yMin: 0, yMax: 1000,
+    zMin: 0, zMax: 1000
+};
+let realBoxSize = {
+    xMin: 0, xMax: 1000,
+    yMin: 0, yMax: 1000,
+    zMin: 0, zMax: 1000
+};
 
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -88,11 +98,12 @@ function updateParticles(particles) {
 
 function updateSimBox(box) {
     if (!box) return;
+    if (scaleEnabled) box = scaleParams; // Use scaleParams if scale is enabled
     if (simBoxHelper) {
         scene.remove(simBoxHelper);
     }
-    const min = new THREE.Vector3(box.MIN_X, box.MIN_Y, box.MIN_Z);
-    const max = new THREE.Vector3(box.MAX_X, box.MAX_Y, box.MAX_Z);
+    const min = new THREE.Vector3(box.xMin, box.yMin, box.zMin);
+    const max = new THREE.Vector3(box.xMax, box.yMax, box.zMax);
     const box3 = new THREE.Box3(min, max);
     simBoxHelper = new THREE.Box3Helper(box3, 0x00fffa);
     scene.add(simBoxHelper);
@@ -112,6 +123,35 @@ function updatePauseButton(paused) {
     } else {
         pauseBtnText.textContent = "Pause";
         pauseIcon.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="4" height="14"/><rect x="12" y="3" width="4" height="14"/></svg>`;
+    }
+
+    checkIfIntervalUpdateNeedToRegister();
+}
+
+function clearIntervals() {
+    if (particlesInterval) {
+        clearInterval(particlesInterval);
+        particlesInterval = null;
+    }
+    if (settingsInterval) {
+        clearInterval(settingsInterval);
+        settingsInterval = null;
+    }
+}
+function setIntervals() {
+    if (!particlesInterval) {
+        particlesInterval = setInterval(fetchParticles, 200);
+    }
+    if (!settingsInterval) {
+        settingsInterval = setInterval(fetchSettings, 1000);
+    }
+}
+function checkIfIntervalUpdateNeedToRegister() {
+    if (!dontUpdateWhenPaused) return;
+    if (paused) {
+        clearIntervals();
+    } else {
+        setIntervals();
     }
 }
 
@@ -142,38 +182,30 @@ function fetchSettings() {
         }
         if (data.MIN_X !== undefined && data.MIN_Y !== undefined && data.MIN_Z !== undefined &&
             data.MAX_X !== undefined && data.MAX_Y !== undefined && data.MAX_Z !== undefined) {
-            updateSimBox({
-                MIN_X: data.MIN_X,
-                MIN_Y: data.MIN_Y,
-                MIN_Z: data.MIN_Z,
-                MAX_X: data.MAX_X,
-                MAX_Y: data.MAX_Y,
-                MAX_Z: data.MAX_Z
-            });
+            // Only update if the box size has changed
+            if (
+            realBoxSize.xMin !== data.MIN_X ||
+            realBoxSize.yMin !== data.MIN_Y ||
+            realBoxSize.zMin !== data.MIN_Z ||
+            realBoxSize.xMax !== data.MAX_X ||
+            realBoxSize.yMax !== data.MAX_Y ||
+            realBoxSize.zMax !== data.MAX_Z
+            ) {
+            realBoxSize = {
+                xMin: data.MIN_X,
+                yMin: data.MIN_Y,
+                zMin: data.MIN_Z,
+                xMax: data.MAX_X,
+                yMax: data.MAX_Y,
+                zMax: data.MAX_Z
+            };
+            updateSimBox(realBoxSize);
+            }
         }
 
         // Update pause state
         paused = data.paused;
         updatePauseButton(paused);
-        if (dontUpdateWhenPaused) {
-            if (paused) {
-                if (particlesInterval) {
-                    clearInterval(particlesInterval);
-                    particlesInterval = null;
-                }
-                if (settingsInterval) {
-                    clearInterval(settingsInterval);
-                    settingsInterval = null;
-                }
-            } else {
-                if (!particlesInterval) {
-                    particlesInterval = setInterval(fetchParticles, 200);
-                }
-                if (!settingsInterval) {
-                    settingsInterval = setInterval(fetchSettings, 1000);
-                }
-            }
-        }
     });
 }
     
@@ -346,44 +378,20 @@ document.getElementById('renderForm').onsubmit = function(e) {
     renderUpdatePausedCheckbox.checked = !dontUpdateWhenPaused;
 
     // Gérer l'intervalle si MAJ si pause change
-    if (dontUpdateWhenPaused && paused) {
-        if (particlesInterval) {
-            clearInterval(particlesInterval);
-            particlesInterval = null;
-        }
-        if (settingsInterval) {
-            clearInterval(settingsInterval);
-            settingsInterval = null;
-        }
-    } else {
-        if (!particlesInterval) {
-            particlesInterval = setInterval(fetchParticles, 200);
-        }
-        if (!settingsInterval) {
-            settingsInterval = setInterval(fetchSettings, 1000);
-        }
-    }
+    checkIfIntervalUpdateNeedToRegister();
 };
 
 // --- Gestion de l'échelle (scale) ---
-let scaleParams = {
-    xMin: 0, xMax: 1000,
-    yMin: 0, yMax: 1000,
-    zMin: 0, zMax: 1000
-};
-
 function applyScaleToParticle(p) {
-    if (!scaleEnabled) return p;
+    // Map p from realBoxSize to scaleParams for each axis
     let np = { ...p };
-    if (scaleParams.xMin !== null && scaleParams.xMax !== null) {
-        np.x = (np.x - scaleParams.xMin) / (scaleParams.xMax - scaleParams.xMin) * 1000 - 500;
+    function scale(val, minSrc, maxSrc, minDst, maxDst) {
+        if (maxSrc - minSrc === 0) return minDst; // Avoid division by zero
+        return ((val - minSrc) / (maxSrc - minSrc)) * (maxDst - minDst) + minDst;
     }
-    if (scaleParams.yMin !== null && scaleParams.yMax !== null) {
-        np.y = (np.y - scaleParams.yMin) / (scaleParams.yMax - scaleParams.yMin) * 1000 - 500;
-    }
-    if (scaleParams.zMin !== null && scaleParams.zMax !== null) {
-        np.z = (np.z - scaleParams.zMin) / (scaleParams.zMax - scaleParams.zMin) * 1000 - 500;
-    }
+    np.x = scale(p.x, realBoxSize.xMin, realBoxSize.xMax, scaleParams.xMin, scaleParams.xMax);
+    np.y = scale(p.y, realBoxSize.yMin, realBoxSize.yMax, scaleParams.yMin, scaleParams.yMax);
+    np.z = scale(p.z, realBoxSize.zMin, realBoxSize.zMax, scaleParams.zMin, scaleParams.zMax);
     return np;
 }
 
@@ -437,7 +445,9 @@ function updateScaleFactorValues(e) {
     scaleParams.zMax = scaleZMaxInput.value !== "" ? parseFloat(scaleZMaxInput.value) : 1000;
     updateScaleOverlayInputs();
     fetchParticles();
-    console.log("Nouveau facteur d'échelle appliqué :", scaleParams);
+    if (scaleEnabled) {
+        updateSimBox(scaleParams);
+    }
 }
 
 // Correction : utiliser addEventListener pour onsubmit
