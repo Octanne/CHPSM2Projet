@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/controls/OrbitControls.js';
 
 let scene, camera, renderer, controls, particlesMesh = null, simBoxHelper = null, paused = false, guiVisible = true;
-let particlesInterval = null, settingsInterval = null, particleSize = 6;
+let particlesInterval = null, settingsInterval = null, particleSize = 5;
 let dontUpdateWhenPaused = false; // Set to true if you want to stop updates when paused
 let particleAsMesh = true; // Use mesh for particles instead of points
 let particleColor = 0xffff00; // Default color
@@ -19,7 +19,7 @@ function init() {
     camera.position.set(1500,1500,1500);
 
     // Add lighting so MeshStandardMaterial is visible
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(1, 1, 1);
@@ -30,6 +30,10 @@ function init() {
     window.addEventListener('resize', resize);
     
     controls = new OrbitControls(camera, renderer.domElement);
+    controls.minAzimuthAngle = -Infinity;
+    controls.maxAzimuthAngle = Infinity;
+    controls.minPolarAngle = 0;
+    controls.maxPolarAngle = Math.PI;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.target.set(0, 0, 0);
