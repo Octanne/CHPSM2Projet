@@ -442,6 +442,7 @@ function updateScaleFactorValues(e) {
 
 // Correction : utiliser addEventListener pour onsubmit
 scaleForm.onsubmit = function(e) {
+    console.log("Formulaire d'échelle soumis");
     e.preventDefault();
     updateScaleFactorValues();
 }

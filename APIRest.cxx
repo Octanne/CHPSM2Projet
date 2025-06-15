@@ -90,12 +90,10 @@ void APIRest::start(int port) {
 
                 // Update simulation settings
                 settings.nb_particles = particles.size();
-                settings.MIN_X = origin_x;
-                settings.MIN_Y = origin_y;
-                settings.MIN_Z = origin_z;
-                settings.MAX_X = origin_x + cube_size;
-                settings.MAX_Y = origin_y + cube_size;
-                settings.MAX_Z = origin_z + cube_size;
+                float min_all = std::min({origin_x, origin_y, origin_z});
+                float max_all = std::max({origin_x + cube_size, origin_y + cube_size, origin_z + cube_size});
+                settings.MIN_X = settings.MIN_Y = settings.MIN_Z = min_all;
+                settings.MAX_X = settings.MAX_Y = settings.MAX_Z = max_all;
                 settings.current_time = 0.f;
                 // We update Max Min 
                 MyRNG::updateMaxMin(
