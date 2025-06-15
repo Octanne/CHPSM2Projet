@@ -6,7 +6,14 @@
     <link rel="stylesheet" href="includes/styles.css">
 </head>
 <body>
-    <button id="closeBtn" title="Fermer l'application"><span id="closeBtnText">Fermer</span></button>
+    <div id="top-right-btns" style="position: fixed; top: 18px; right: 24px; z-index: 1100; display: flex; gap: 10px;">
+        <button id="toggleGuiBtn" title="Afficher/Masquer l'interface">
+            <span id="toggleGuiBtnText">Cacher GUI</span>
+        </button>
+        <button id="closeBtn" title="Fermer l'application">
+            <span id="closeBtnText">Fermer</span>
+        </button>
+    </div>
     <div id="overlays-container">
         <div id="overlay-settings">
             <h2>Paramètres Simulation</h2>
@@ -125,16 +132,6 @@
             <div id="uploadParticlesStatus">&nbsp;</div>
         </div>
     </div>
-    <canvas id="scene"></canvas>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js"
-                }
-        }
-    </script>
-    <script type="module" src="includes/scripts.js"></script>
-
     <!-- Overlay de contrôle de timeline -->
     <div id="overlay-timeline">
         <button id="playBtn" title="Lecture">
@@ -155,5 +152,45 @@
         </button>
         <input type="range" id="timelineSlider" min="0" max="100" value="0" step="1">
     </div>
+    <!-- Overlay de contrôle du scale -->
+    <div id="overlay-scale">
+        <h2>Échelle coordonnées</h2>
+        <form id="scaleForm" autocomplete="off">
+            <div class="scale-range-row">
+                <span class="axis-label">X</span>
+                <input type="number" step="0.01" name="scale_x_min" id="scale_x_min" placeholder="Min X ">
+                <span class="to-label">→</span>
+                <input type="number" step="0.01" name="scale_x_max" id="scale_x_max" placeholder="Max X ">
+            </div>
+            <div class="scale-range-row">
+                <span class="axis-label">Y</span>
+                <input type="number" step="0.01" name="scale_y_min" id="scale_y_min" placeholder="Min Y ">
+                <span class="to-label">→</span>
+                <input type="number" step="0.01" name="scale_y_max" id="scale_y_max" placeholder="Max Y ">
+            </div>
+            <div class="scale-range-row">
+                <span class="axis-label">Z</span>
+                <input type="number" step="0.01" name="scale_z_min" id="scale_z_min" placeholder="Min Z ">
+                <span class="to-label">→</span>
+                <input type="number" step="0.01" name="scale_z_max" id="scale_z_max" placeholder="Max Z ">
+            </div>
+            <div class="form-actions">
+                <button type="button" id="toggleScaleBtn">
+                    <span id="toggleScaleBtnText">Activer</span>
+                </button>
+            </div>
+        </form>
+    </div>
+    <!-- Scene de rendu WebGL -->
+    <canvas id="scene"></canvas>
+    <!-- Import des scripts JavaScript -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js"
+                }
+        }
+    </script>
+    <script type="module" src="includes/scripts.js"></script>
 </body>
 </html>

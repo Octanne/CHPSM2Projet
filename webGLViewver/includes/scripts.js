@@ -260,6 +260,21 @@ document.getElementById('uploadParticlesInput').onchange = function(e) {
     e.target.value = "";
 };
 
+// Gestion du bouton show/hide GUI
+const toggleGuiBtn = document.getElementById('toggleGuiBtn');
+const toggleGuiBtnText = document.getElementById('toggleGuiBtnText');
+let guiVisible = true;
+toggleGuiBtn.onclick = function() {
+    guiVisible = !guiVisible;
+    if (guiVisible) {
+        document.body.classList.remove('hide-gui');
+        toggleGuiBtnText.textContent = "Cacher GUI";
+    } else {
+        document.body.classList.add('hide-gui');
+        toggleGuiBtnText.textContent = "Afficher GUI";
+    }
+};
+
 // Initialize the application
 init();
 // Fetch initial data
