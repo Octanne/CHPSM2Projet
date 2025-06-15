@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualisation N-Body 3D</title>
+    <link rel="stylesheet" href="includes/styles.css">
+</head>
+<body>
+    <button id="closeBtn" title="Fermer l'application"><span id="closeBtnText">Fermer</span></button>
+    <div id="overlays-container">
+        <div id="overlay">
+            <h2>Paramètres Simulation</h2>
+            <form id="settingsForm" autocomplete="off">      
+                <div class="form-row">
+                    <label for="particle_size">particleSize</label>
+                    <span class="current-value" id="particle_size_current"></span>
+                    <input type="number" step="0.01" name="dt" id="particle_size_input" placeholder="Modifier...">
+                </div>
+                <div class="form-row">
+                    <label for="nb_particles">nbParticles</label>
+                    <span class="current-value" id="nb_particles_current"></span>
+                    <input type="number" name="nb_particles" id="nb_particles_input" placeholder="Modifier...">
+                </div>
+                <div class="form-row">
+                    <label for="current_time">currentTime</label>
+                    <span class="current-value" id="current_time_current"></span>
+                    <input type="number" step="0.1" name="current_time" id="current_time_input" placeholder="Modifier...">
+                </div> 
+                <div class="form-row">
+                    <label for="t_total">maxTime</label>
+                    <span class="current-value" id="t_total_current"></span>
+                    <input type="number" step="0.1" name="t_total" id="t_total_input" placeholder="Modifier...">
+                </div>       
+                <div class="form-row">
+                    <label for="dt">deltaTime</label>
+                    <span class="current-value" id="dt_current"></span>
+                    <input type="number" step="0.000001" name="dt" id="dt_input" placeholder="Modifier...">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="updateBtn">
+                        <span class="icon" id="updateIcon">
+                            <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
+                                <path d="M10 2a8 8 0 1 1-7.446 5.032l1.857.742A6 6 0 1 0 10 4V2z"/>
+                                <polygon points="2,2 6,2 6,6" fill="#23272f"/>
+                            </svg>
+                        </span>
+                        Mettre à jour
+                    </button>
+                    <button type="button" id="pauseBtn">
+                        <span id="pauseIcon" class="icon"></span>
+                        <span id="pauseBtnText"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div id="overlay3">
+            <h2>Limites de la boîte de simulation</h2>
+            <form id="boxForm" autocomplete="off">
+                <div class="form-row">
+                    <label for="MIN_X">MIN_X</label>
+                    <span class="current-value" id="MIN_X_current"></span>
+                    <input type="number" step="0.1" name="MIN_X" id="MIN_X_input" placeholder="Modifier...">
+                </div>
+                <div class="form-row">
+                    <label for="MIN_Y">MIN_Y</label>
+                    <span class="current-value" id="MIN_Y_current"></span>
+                    <input type="number" step="0.1" name="MIN_Y" id="MIN_Y_input" placeholder="Modifier...">
+                </div>
+                <div class="form-row">
+                    <label for="MIN_Z">MIN_Z</label>
+                    <span class="current-value" id="MIN_Z_current"></span>
+                    <input type="number" step="0.1" name="MIN_Z" id="MIN_Z_input" placeholder="Modifier...">
+                </div>
+                <div class="form-row">
+                    <label for="MAX_X">MAX_X</label>
+                    <span class="current-value" id="MAX_X_current"></span>
+                    <input type="number" step="0.1" name="MAX_X" id="MAX_X_input" placeholder="Modifier...">
+                </div>
+                <div class="form-row">
+                    <label for="MAX_Y">MAX_Y</label>
+                    <span class="current-value" id="MAX_Y_current"></span>
+                    <input type="number" step="0.1" name="MAX_Y" id="MAX_Y_input" placeholder="Modifier...">
+                </div>
+                <div class="form-row">
+                    <label for="MAX_Z">MAX_Z</label>
+                    <span class="current-value" id="MAX_Z_current"></span>
+                    <input type="number" step="0.1" name="MAX_Z" id="MAX_Z_input" placeholder="Modifier...">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="updateBoxBtn">
+                        <span class="icon">
+                            <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
+                                <path d="M10 2a8 8 0 1 1-7.446 5.032l1.857.742A6 6 0 1 0 10 4V2z"/>
+                                <polygon points="2,2 6,2 6,6" fill="#23272f"/>
+                            </svg>
+                        </span>
+                        Mettre à jour
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div id="overlay2">
+            <h2>Gestion Particules</h2>
+            <div class="particles-actions-row">
+                <button id="downloadParticlesBtn" type="button">
+                    <span class="icon">
+                        <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 2v10m0 0l-4-4m4 4l4-4" stroke="#23272f" stroke-width="2" fill="none"/>
+                            <rect x="4" y="16" width="12" height="2" rx="1" fill="#23272f"/>
+                        </svg>
+                    </span>
+                    Sauvegarder
+                </button>
+                <input type="file" id="uploadParticlesInput" accept=".json" style="display:none;">
+                <button id="uploadParticlesBtn" type="button" id="sendBtn">
+                    <span class="icon">
+                        <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 18V8m0 0l-4 4m4-4l4 4" stroke="#23272f" stroke-width="2" fill="none"/>
+                            <rect x="4" y="4" width="12" height="2" rx="1" fill="#23272f"/>
+                        </svg>
+                    </span>
+                    Envoyer
+                </button>
+            </div>
+            <div id="uploadParticlesStatus">&nbsp;</div>
+        </div>
+    </div>
+    <canvas id="scene"></canvas>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.177.0/build/three.module.js"
+                }
+        }
+    </script>
+    <script type="module" src="includes/scripts.js"></script>
+</body>
+</html>
