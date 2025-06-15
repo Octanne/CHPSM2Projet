@@ -1,8 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.177.0/examples/jsm/controls/OrbitControls.js';
 
-let scene, camera, renderer, controls, particlesMesh = null, simBoxHelper = null, paused = false;
+let scene, camera, renderer, controls, particlesMesh = null, simBoxHelper = null, paused = false, guiVisible = true;
 let particlesInterval = null, settingsInterval = null, particleSize = 6;
+let dontUpdateWhenPaused = false; // Set to true if you want to stop updates when paused
+let particleAsMesh = true; // Use mesh for particles instead of points
+let particleColor = 0xffff00; // Default color
 
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -14,6 +17,13 @@ function init() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 20000);
     camera.position.set(1500,1500,1500);
+
+    // Add lighting so MeshStandardMaterial is visible
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
     
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias: true });
     resize();
@@ -34,17 +44,36 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+let particlesMeshses = [];
 function updateParticles(particles) {
+    // We clean particlesMeshses
     if (particlesMesh) scene.remove(particlesMesh);
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particles.length * 3);
-    particles.forEach((p, i) => {
-        positions.set([p.x, p.y, p.z], i * 3);
-    });
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const material = new THREE.PointsMaterial({ color: 0xffff00, size: particleSize });
-    particlesMesh = new THREE.Points(geometry, material);
-    scene.add(particlesMesh);
+    if (particlesMeshses) {
+        particlesMeshses.forEach(mesh => scene.remove(mesh));
+    }
+    if (particleAsMesh) {
+        particlesMeshses = [];
+        const sphereGeometry = new THREE.SphereGeometry(particleSize, 16, 16);
+        const sphereMaterial = new THREE.MeshStandardMaterial({ color: particleColor });
+        particles.forEach(p => {
+            const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            mesh.position.set(p.x, p.y, p.z);
+            particlesMeshses.push(mesh);
+            scene.add(mesh);
+        });
+    } else {
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particles.length * 3);
+        particles.forEach((p, i) => {
+            positions.set([p.x, p.y, p.z], i * 3);
+        });
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const material = new THREE.PointsMaterial({ color: particleColor, size: particleSize });
+        particlesMesh = new THREE.Points(geometry, material);
+
+        scene.add(particlesMesh);
+    }
+
 }
 
 function updateSimBox(box) {
@@ -84,13 +113,11 @@ function fetchParticles() {
 
 function fetchSettings() {
     fetch('/api/settings').then(r=>r.json()).then(data=>{
-        document.getElementById('particle_size_current').textContent = particleSize;
         document.getElementById('dt_current').textContent = data.dt;
         document.getElementById('t_total_current').textContent = data.t_total;
         document.getElementById('nb_particles_current').textContent = data.nb_particles;
         document.getElementById('current_time_current').textContent = data.current_time;
         
-        document.getElementById('particle_size_input').placeholder = particleSize;
         document.getElementById('dt_input').placeholder = data.dt;
         document.getElementById('t_total_input').placeholder = data.t_total;
         document.getElementById('nb_particles_input').placeholder = data.nb_particles;
@@ -118,21 +145,23 @@ function fetchSettings() {
         // Update pause state
         paused = data.paused;
         updatePauseButton(paused);
-        if (paused) {
-            if (particlesInterval) {
-                clearInterval(particlesInterval);
-                particlesInterval = null;
-            }
-            if (settingsInterval) {
-                clearInterval(settingsInterval);
-                settingsInterval = null;
-            }
-        } else {
-            if (!particlesInterval) {
-                particlesInterval = setInterval(fetchParticles, 200);
-            }
-            if (!settingsInterval) {
-                settingsInterval = setInterval(fetchSettings, 1000);
+        if (dontUpdateWhenPaused) {
+            if (paused) {
+                if (particlesInterval) {
+                    clearInterval(particlesInterval);
+                    particlesInterval = null;
+                }
+                if (settingsInterval) {
+                    clearInterval(settingsInterval);
+                    settingsInterval = null;
+                }
+            } else {
+                if (!particlesInterval) {
+                    particlesInterval = setInterval(fetchParticles, 200);
+                }
+                if (!settingsInterval) {
+                    settingsInterval = setInterval(fetchSettings, 1000);
+                }
             }
         }
     });
@@ -142,13 +171,6 @@ function fetchSettings() {
 document.getElementById('settingsForm').onsubmit = function(e){
     e.preventDefault();
     const payload = {};
-    
-    const v1 = document.getElementById('particle_size_input').value;
-    if (v1 !== "") {
-        particleSize = parseFloat(v1);
-        document.getElementById('particle_size_input').value = "";
-        document.getElementById('particle_size_current').textContent = particleSize;
-    }
     
     const v2 = document.getElementById('dt_input').value;
     if (v2 !== "") payload.dt = parseFloat(v2);
@@ -261,17 +283,75 @@ document.getElementById('uploadParticlesInput').onchange = function(e) {
 };
 
 // Gestion du bouton show/hide GUI
-const toggleGuiBtn = document.getElementById('toggleGuiBtn');
-const toggleGuiBtnText = document.getElementById('toggleGuiBtnText');
-let guiVisible = true;
-toggleGuiBtn.onclick = function() {
+document.getElementById('toggleGuiBtn').onclick = function() {
     guiVisible = !guiVisible;
+    const toggleGuiBtnText = document.getElementById('toggleGuiBtnText');
     if (guiVisible) {
         document.body.classList.remove('hide-gui');
         toggleGuiBtnText.textContent = "Cacher GUI";
     } else {
         document.body.classList.add('hide-gui');
         toggleGuiBtnText.textContent = "Afficher GUI";
+    }
+};
+
+function updateRenderOverlayValues() {
+    document.getElementById('render_particle_size_current').textContent = particleSize;
+    document.getElementById('render_particle_color_current').textContent = '#' + particleColor.toString(16).padStart(6, '0');
+    document.getElementById('render_type_current').textContent = particleAsMesh ? "Sphère" : "Points";
+    document.getElementById('render_update_paused_current').textContent = dontUpdateWhenPaused ? "Non" : "Oui";
+    // Update les valeurs des inputs avec les variables JS
+    renderParticleSizeInput.placeholder = particleSize;
+    renderParticleColorInput.placeholder = "#" + particleColor.toString(16).padStart(6, '0');
+    renderTypeSelect.value = particleAsMesh ? "mesh" : "points";
+    renderUpdatePausedCheckbox.checked = !dontUpdateWhenPaused;
+}
+
+// --- Overlay Render Controls ---
+const renderParticleSizeInput = document.getElementById('render_particle_size');
+const renderParticleColorInput = document.getElementById('render_particle_color');
+const renderTypeSelect = document.getElementById('render_type');
+const renderUpdatePausedCheckbox = document.getElementById('render_update_paused');
+updateRenderOverlayValues();
+
+// Application des paramètres uniquement lors du submit (bouton ou Entrée)
+document.getElementById('renderForm').onsubmit = function(e) {
+    e.preventDefault();
+    // Appliquer les valeurs
+    const sizeVal = parseFloat(renderParticleSizeInput.value);
+    if (!isNaN(sizeVal)) particleSize = sizeVal;
+
+    const colorVal = renderParticleColorInput.value;
+    if (colorVal) particleColor = parseInt(colorVal.replace("#", "0x"));
+
+    particleAsMesh = (renderTypeSelect.value === "mesh");
+    dontUpdateWhenPaused = !renderUpdatePausedCheckbox.checked;
+
+    updateRenderOverlayValues();
+    fetchParticles();
+
+    // On reset les valeurs des inputs
+    renderParticleSizeInput.value = "";
+    renderTypeSelect.value = particleAsMesh ? "mesh" : "points";
+    renderUpdatePausedCheckbox.checked = !dontUpdateWhenPaused;
+
+    // Gérer l'intervalle si MAJ si pause change
+    if (dontUpdateWhenPaused && paused) {
+        if (particlesInterval) {
+            clearInterval(particlesInterval);
+            particlesInterval = null;
+        }
+        if (settingsInterval) {
+            clearInterval(settingsInterval);
+            settingsInterval = null;
+        }
+    } else {
+        if (!particlesInterval) {
+            particlesInterval = setInterval(fetchParticles, 200);
+        }
+        if (!settingsInterval) {
+            settingsInterval = setInterval(fetchSettings, 1000);
+        }
     }
 };
 

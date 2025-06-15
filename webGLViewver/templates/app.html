@@ -19,11 +19,6 @@
             <h2>Paramètres Simulation</h2>
             <form id="settingsForm" autocomplete="off">      
                 <div class="form-row">
-                    <label for="particle_size">particleSize</label>
-                    <span class="current-value" id="particle_size_current"></span>
-                    <input type="number" step="0.01" name="dt" id="particle_size_input" placeholder="Modifier...">
-                </div>
-                <div class="form-row">
                     <label for="nb_particles">nbParticles</label>
                     <span class="current-value" id="nb_particles_current"></span>
                     <input type="number" name="nb_particles" id="nb_particles_input" placeholder="Modifier...">
@@ -132,7 +127,80 @@
             <div id="uploadParticlesStatus">&nbsp;</div>
         </div>
     </div>
-    <!-- Overlay de contrôle de timeline -->
+    <!-- Nouveau container pour les overlays bas droit -->
+    <div id="bottomright-overlays-container">
+        <div id="overlay-render">
+            <h2>Rendu Particules</h2>
+            <form id="renderForm" autocomplete="off">
+                <div class="form-row">
+                    <label for="render_particle_size">ParticleSize</label>
+                    <span class="current-value" id="render_particle_size_current"></span>
+                    <input type="number" min="1" max="100" step="1" id="render_particle_size" name="render_particle_size" value="">
+                </div>
+                <div class="form-row">
+                    <label for="render_particle_color">Colour</label>
+                    <span class="current-value" id="render_particle_color_current"></span>
+                    <input type="color" id="render_particle_color" name="render_particle_color" value="#ffff00" style="width:40px;height:28px;padding:0;border:none;">
+                </div>
+                <div class="form-row">
+                    <label for="render_type">Render</label>
+                    <span class="current-value" id="render_type_current"></span>
+                    <select id="render_type" name="render_type">
+                        <option value="mesh">Sphère</option>
+                        <option value="points">Points</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label for="render_update_paused">UpOnPause</label>
+                    <span class="current-value" id="render_update_paused_current"></span>
+                    <label class="switch">
+                        <input type="checkbox" id="render_update_paused" name="render_update_paused">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="applyRenderBtn">
+                        <span class="icon" id="applyRenderIcon">
+                            <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
+                                <path d="M10 2a8 8 0 1 1-7.446 5.032l1.857.742A6 6 0 1 0 10 4V2z"/>
+                                <polygon points="2,2 6,2 6,6" fill="#23272f"/>
+                            </svg>
+                        </span>
+                        Mettre à jour
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div id="overlay-scale">
+            <h2>Échelle coordonnées</h2>
+            <form id="scaleForm" autocomplete="off">
+                <div class="scale-range-row">
+                    <span class="axis-label">X</span>
+                    <input type="number" step="0.01" name="scale_x_min" id="scale_x_min" placeholder="Min X ">
+                    <span class="to-label">→</span>
+                    <input type="number" step="0.01" name="scale_x_max" id="scale_x_max" placeholder="Max X ">
+                </div>
+                <div class="scale-range-row">
+                    <span class="axis-label">Y</span>
+                    <input type="number" step="0.01" name="scale_y_min" id="scale_y_min" placeholder="Min Y ">
+                    <span class="to-label">→</span>
+                    <input type="number" step="0.01" name="scale_y_max" id="scale_y_max" placeholder="Max Y ">
+                </div>
+                <div class="scale-range-row">
+                    <span class="axis-label">Z</span>
+                    <input type="number" step="0.01" name="scale_z_min" id="scale_z_min" placeholder="Min Z ">
+                    <span class="to-label">→</span>
+                    <input type="number" step="0.01" name="scale_z_max" id="scale_z_max" placeholder="Max Z ">
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="toggleScaleBtn">
+                        <span id="toggleScaleBtnText">Activer</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Overlay pour la timeline -->
     <div id="overlay-timeline">
         <button id="playBtn" title="Lecture">
             <span class="icon">
@@ -151,35 +219,6 @@
             </span>
         </button>
         <input type="range" id="timelineSlider" min="0" max="100" value="0" step="1">
-    </div>
-    <!-- Overlay de contrôle du scale -->
-    <div id="overlay-scale">
-        <h2>Échelle coordonnées</h2>
-        <form id="scaleForm" autocomplete="off">
-            <div class="scale-range-row">
-                <span class="axis-label">X</span>
-                <input type="number" step="0.01" name="scale_x_min" id="scale_x_min" placeholder="Min X ">
-                <span class="to-label">→</span>
-                <input type="number" step="0.01" name="scale_x_max" id="scale_x_max" placeholder="Max X ">
-            </div>
-            <div class="scale-range-row">
-                <span class="axis-label">Y</span>
-                <input type="number" step="0.01" name="scale_y_min" id="scale_y_min" placeholder="Min Y ">
-                <span class="to-label">→</span>
-                <input type="number" step="0.01" name="scale_y_max" id="scale_y_max" placeholder="Max Y ">
-            </div>
-            <div class="scale-range-row">
-                <span class="axis-label">Z</span>
-                <input type="number" step="0.01" name="scale_z_min" id="scale_z_min" placeholder="Min Z ">
-                <span class="to-label">→</span>
-                <input type="number" step="0.01" name="scale_z_max" id="scale_z_max" placeholder="Max Z ">
-            </div>
-            <div class="form-actions">
-                <button type="button" id="toggleScaleBtn">
-                    <span id="toggleScaleBtnText">Activer</span>
-                </button>
-            </div>
-        </form>
     </div>
     <!-- Scene de rendu WebGL -->
     <canvas id="scene"></canvas>

@@ -30,6 +30,17 @@ body {
     z-index: 1000;
 }
 
+#bottomright-overlays-container {
+    position: fixed;
+    right: 28px;
+    bottom: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    z-index: 1003;
+    align-items: flex-end;
+}
+
 h2 {
     margin: 0 0 12px 0;
     font-size: 1.2em;
@@ -208,6 +219,24 @@ button:hover {
 
 #overlay-particles {
     padding-bottom: 0;
+}
+
+#bottomright-overlays-container > #overlay-render,
+#bottomright-overlays-container > #overlay-scale {
+    position: static;
+    margin: 0;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    top: auto;
+    z-index: auto;
+}
+
+#overlay-render,
+#overlay-scale {
+    min-width: 260px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 #overlay-timeline {
@@ -400,9 +429,9 @@ button:hover {
     display: inline-block;
 }
 
+.hide-gui #bottomright-overlays-container,
 .hide-gui #overlays-container,
-.hide-gui #overlay-timeline,
-.hide-gui #overlay-scale {
+.hide-gui #overlay-timeline {
     display: none !important;
 }
 
@@ -430,4 +459,153 @@ button:hover {
     font-size: 1em;
     font-weight: 600;
     display: inline-block;
+}
+
+#overlay-render {
+    position: fixed;
+    right: 28px;
+    bottom: 180px;
+    background: rgba(34, 40, 49, 0.97);
+    border-radius: 14px;
+    box-shadow: 0 4px 24px #0008;
+    padding: 18px 26px 14px 26px;
+    z-index: 1004;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#overlay-render h2 {
+    margin: 0 0 14px 0;
+    font-size: 1.1em;
+    color: #ffd369;
+    text-align: center;
+}
+
+#overlay-render .form-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 1fr;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 100%;
+    gap: 8px;
+}
+
+#overlay-render label {
+    font-weight: 500;
+    margin-right: 0;
+    min-width: 90px;
+    display: block;
+    text-align: left;
+}
+
+#overlay-render .current-value {
+    background: #393e46;
+    color: #ffd369;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-width: 70px;
+    text-align: center;
+    margin-right: 0;
+    margin-left: 0;
+    display: block;
+}
+
+#overlay-render input[type="number"],
+#overlay-render input[type="color"],
+#overlay-render select,
+#overlay-render input[type="checkbox"] {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+#overlay-render input[type="color"] {
+    min-width: 100%;
+    max-width: 100%;
+    width: 100%;
+    height: 38px;
+    padding: 0;
+    border: none;
+    vertical-align: middle;
+    box-sizing: border-box;
+    background: none;
+    cursor: pointer;
+}
+
+#overlay-render input[type="checkbox"] {
+    width: auto;
+    margin-left: 8px;
+    justify-self: start;
+}
+
+#overlay-render select {
+    min-width: 80px;
+}
+
+#overlay-render .form-actions {
+    grid-column: 1 / span 3;
+    justify-content: center;
+    margin-top: 8px;
+    display: flex;
+    gap: 10px;
+}
+
+#overlay-render .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    margin-right: 0;
+    vertical-align: middle;
+}
+
+#overlay-render .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+#overlay-render .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #393e46;
+    border-radius: 24px;
+    transition: background 0.2s;
+}
+
+#overlay-render .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #ffd369;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+#overlay-render .switch input:checked + .slider {
+    background-color: #ffd369;
+}
+
+#overlay-render .switch input:checked + .slider:before {
+    background-color: #23272f;
+    transform: translateX(66px);
+}
+
+/* Ajuste la colonne du switch dans la grille */
+#overlay-render .form-row .switch {
+    justify-self: start;
+}
+
+.hide-gui #overlay-render {
+    display: none !important;
 }
