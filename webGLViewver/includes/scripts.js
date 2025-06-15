@@ -409,6 +409,7 @@ toggleScaleBtn.onclick = function() {
     scaleEnabled = !scaleEnabled;
     updateScaleOverlayInputs();
     fetchParticles();
+    updateSimBox(realBoxSize);
 };
 
 function updateScaleOverlayInputs() {
@@ -435,8 +436,7 @@ function updateScaleOverlayInputs() {
     }
 }
 
-function updateScaleFactorValues(e) {
-    if (e) e.preventDefault();
+function updateScaleFactorValues() {
     scaleParams.xMin = scaleXMinInput.value !== "" ? parseFloat(scaleXMinInput.value) : 0;
     scaleParams.xMax = scaleXMaxInput.value !== "" ? parseFloat(scaleXMaxInput.value) : 1000;
     scaleParams.yMin = scaleYMinInput.value !== "" ? parseFloat(scaleYMinInput.value) : 0;
@@ -445,18 +445,14 @@ function updateScaleFactorValues(e) {
     scaleParams.zMax = scaleZMaxInput.value !== "" ? parseFloat(scaleZMaxInput.value) : 1000;
     updateScaleOverlayInputs();
     fetchParticles();
-    if (scaleEnabled) {
-        updateSimBox(scaleParams);
-    }
+    updateSimBox(realBoxSize);
 }
 
 // Correction : utiliser addEventListener pour onsubmit
 scaleForm.onsubmit = function(e) {
-    console.log("Formulaire d'échelle soumis");
     e.preventDefault();
     updateScaleFactorValues();
 }
-updateScaleBtn.onclick = updateScaleFactorValues;
 
 // Initialisation des valeurs d'échelle à l'ouverture
 updateScaleOverlayInputs();
