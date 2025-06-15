@@ -8,7 +8,7 @@
 <body>
     <button id="closeBtn" title="Fermer l'application"><span id="closeBtnText">Fermer</span></button>
     <div id="overlays-container">
-        <div id="overlay">
+        <div id="overlay-settings">
             <h2>Paramètres Simulation</h2>
             <form id="settingsForm" autocomplete="off">      
                 <div class="form-row">
@@ -53,7 +53,7 @@
                 </div>
             </form>
         </div>
-        <div id="overlay3">
+        <div id="overlay-boxsimulation">
             <h2>Limites de la boîte de simulation</h2>
             <form id="boxForm" autocomplete="off">
                 <div class="form-row">
@@ -99,7 +99,7 @@
                 </div>
             </form>
         </div>
-        <div id="overlay2">
+        <div id="overlay-particles">
             <h2>Gestion Particules</h2>
             <div class="particles-actions-row">
                 <button id="downloadParticlesBtn" type="button">
@@ -134,5 +134,26 @@
         }
     </script>
     <script type="module" src="includes/scripts.js"></script>
+
+    <!-- Overlay de contrôle de timeline -->
+    <div id="overlay-timeline">
+        <button id="playBtn" title="Lecture">
+            <span class="icon">
+                <!-- Icône Play -->
+                <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;">
+                    <polygon points="5,3 17,10 5,17"/>
+                </svg>
+            </span>
+        </button>
+        <button id="recordBtn" title="Enregistrer">
+            <span class="icon">
+                <!-- Icône Record -->
+                <svg viewBox="0 0 20 20" fill="#e74c3c" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;">
+                    <circle cx="10" cy="10" r="7"/>
+                </svg>
+            </span>
+        </button>
+        <input type="range" id="timelineSlider" min="0" max="100" value="0" step="1">
+    </div>
 </body>
 </html>

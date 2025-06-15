@@ -6,9 +6,9 @@ body {
     font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-#overlay,
-#overlay2,
-#overlay3 {
+#overlay-settings,
+#overlay-particles,
+#overlay-boxsimulation {
     background: rgba(34, 40, 49, 0.97);
     padding: 22px 28px 18px 28px;
     border-radius: 12px;
@@ -210,6 +210,108 @@ button:hover {
     color: #ffd369;
 }
 
-#overlay2 {
+#overlay-particles {
     padding-bottom: 0;
+}
+
+#overlay-timeline {
+    position: fixed;
+    left: 50%;
+    bottom: 32px;
+    transform: translateX(-50%);
+    background: rgba(34, 40, 49, 0.97);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px #0008;
+    padding: 16px 28px 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    z-index: 1002;
+    min-width: 340px;
+}
+
+#overlay-timeline button {
+    background: #ffd369;
+    color: #23272f;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    transition: background 0.2s;
+    box-shadow: 0 2px 8px #0003;
+}
+
+#overlay-timeline button:hover {
+    background: #ffb800;
+}
+
+#overlay-timeline .icon {
+    width: 22px;
+    height: 22px;
+}
+
+#timelineSlider {
+    flex: 1;
+    margin: 0 12px;
+    height: 4px;
+    background: #393e46;
+    border-radius: 2px;
+    outline: none;
+    accent-color: #ffd369;
+    min-width: 120px;
+    max-width: 340px;
+}
+
+#timelineSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffd369;
+    border: 2px solid #23272f;
+    cursor: pointer;
+    box-shadow: 0 2px 6px #0004;
+}
+
+#timelineSlider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffd369;
+    border: 2px solid #23272f;
+    cursor: pointer;
+    box-shadow: 0 2px 6px #0004;
+}
+
+#timelineSlider::-ms-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffd369;
+    border: 2px solid #23272f;
+    cursor: pointer;
+    box-shadow: 0 2px 6px #0004;
+}
+
+#timelineSlider:focus {
+    outline: none;
+    border: none;
+}
+
+#timelineSlider::-webkit-slider-runnable-track {
+    height: 4px;
+    background: #393e46;
+    border-radius: 2px;
+}
+
+#timelineSlider::-ms-fill-lower,
+#timelineSlider::-ms-fill-upper {
+    background: #393e46;
+    border-radius: 2px;
 }
