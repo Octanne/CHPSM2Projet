@@ -19,12 +19,13 @@ Particle::Particle() {
         velocity = Vector3D(MyRNG::get_velocity_component(), MyRNG::get_velocity_component(), MyRNG::get_velocity_component());
         acceleration = Vector3D(0.f, 0.f, 0.f);
         mass = MyRNG::get_mass();
+        masseVolumique = 1.0f;
         id = id_counter++;
         history.push_back(position);
 }
 
-Particle::Particle(float x, float y, float z, float vx, float vy, float vz, float mass)
-    : position(x, y, z), velocity(vx, vy, vz), acceleration(0.f, 0.f, 0.f), mass(mass), id(id_counter++) {
+Particle::Particle(float x, float y, float z, float vx, float vy, float vz, float mass, float masseVolumique)
+    : position(x, y, z), velocity(vx, vy, vz), acceleration(0.f, 0.f, 0.f), mass(mass), masseVolumique(masseVolumique), id(id_counter++) {
     history.push_back(position);
 }
 
@@ -43,6 +44,8 @@ float Particle::getMass() const { return mass; }
 int Particle::getId() const { return id; }
 Vector3D Particle::getPosition() const { return position; }
 Vector3D Particle::getVelocity() const { return velocity; }
+float Particle::getMasseVolumique() const { return masseVolumique; }
+void Particle::setMasseVolumique(float v) { masseVolumique = v; }
 
 // Réinitialise l'accélération pour la nouvelle itération
 void Particle::resetAcceleration() { acceleration = Vector3D(0.f, 0.f, 0.f); }

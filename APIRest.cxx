@@ -24,7 +24,8 @@ void APIRest::start(int port) {
                     {"vx", p.getVelocity().x},
                     {"vy", p.getVelocity().y},
                     {"vz", p.getVelocity().z},
-                    {"mass", p.getMass()}
+                    {"mass", p.getMass()},
+                    {"masseVolumique", p.getMasseVolumique()}
                 });
             }
             res.set_content(j.dump(), "application/json");
@@ -51,11 +52,9 @@ void APIRest::start(int port) {
                     float x = jp.value("x", 0.f);
                     float y = jp.value("y", 0.f);
                     float z = jp.value("z", 0.f);
-                    particles.emplace_back(
-                        x, y, z,
-                        jp.value("vx", 0.f), jp.value("vy", 0.f), jp.value("vz", 0.f),
-                        jp.value("mass", 1.f)
-                    );
+                    float mass = jp.value("mass", 1.f);
+                    float masseVol = jp.value("masseVolumique", 1.f);
+                    particles.emplace_back(x, y, z, jp.value("vx", 0.f), jp.value("vy", 0.f), jp.value("vz", 0.f), mass, masseVol);
                     min_x = std::min(min_x, x);
                     min_y = std::min(min_y, y);
                     min_z = std::min(min_z, z);

@@ -232,7 +232,12 @@
                 </svg>
             </span>
         </button>
-        <input type="range" id="timelineSlider" min="0" max="100" value="0" step="1">
+        <div id="simTimeBarContainer" style="width: 80%; margin: 20px auto;">
+            <input type="range" id="simTimeSlider" min="0" max="100" value="0" step="1" style="width: 100%;">
+            <div style="text-align:center;">
+                <span id="simTimeLabel">t = 0</span>
+            </div>
+        </div>
     </div>
     <!-- Scene de rendu WebGL -->
     <canvas id="scene"></canvas>

@@ -61,22 +61,35 @@ function animate() {
 
 let particlesMeshses = [];
 function updateParticles(particles) {
-    // We clean particlesMeshses
     if (particlesMesh) scene.remove(particlesMesh);
     if (particlesMeshses) {
         particlesMeshses.forEach(mesh => scene.remove(mesh));
     }
-    // Appliquer l'échelle si activée
     let displayParticles = scaleEnabled
         ? particles.map(applyScaleToParticle)
         : particles;
 
+    // 1. Calcule la taille brute pour chaque particule
+    const rawSizes = displayParticles.map(p =>
+        Math.cbrt((p.mass || 1) / (p.masseVolumique || 1))
+    );
+    // 2. Trouve la taille brute maximale
+    const maxRawSize = Math.max(...rawSizes, 1);
+
+    // 3. Taille max d'affichage
+    const maxDisplaySize = 15;
+    const minDisplaySize = 5;
+
     if (particleAsMesh) {
         particlesMeshses = [];
-        const sphereGeometry = new THREE.SphereGeometry(particleSize, 16, 16);
         const sphereMaterial = new THREE.MeshStandardMaterial({ color: particleColor });
-        displayParticles.forEach(p => {
-            const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        displayParticles.forEach((p, i) => {
+            // 4. Taille proportionnelle
+            let size = rawSizes[i] / maxRawSize * maxDisplaySize;
+            size = Math.max(minDisplaySize, size);
+
+            const geometry = new THREE.SphereGeometry(size, 16, 16);
+            const mesh = new THREE.Mesh(geometry, sphereMaterial);
             mesh.position.set(p.x, p.y, p.z);
             particlesMeshses.push(mesh);
             scene.add(mesh);
@@ -161,6 +174,34 @@ function fetchParticles() {
     });
 }
 
+
+   
+const simTimeSlider = document.getElementById('simTimeSlider');
+const simTimeLabel = document.getElementById('simTimeLabel');
+
+function updateSimTimeSlider(settings) {
+    // settings.t_total et settings.current_time doivent être définis
+    simTimeSlider.max = Math.round(settings.t_total);
+    simTimeSlider.value = Math.round(settings.current_time);
+    simTimeLabel.textContent = `t = ${settings.current_time}`;
+}
+
+// Quand on bouge le curseur, on met à jour le temps de la simulation
+simTimeSlider.oninput = function() {
+    simTimeLabel.textContent = `t = ${this.value}`;
+};
+simTimeSlider.onchange = function() {
+    // On envoie la nouvelle valeur à l'API
+    fetch('/api/settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ current_time: parseFloat(this.value) })
+    }).then(() => {
+        fetchParticles();
+        fetchSettings();
+    });
+};
+
 function fetchSettings() {
     fetch('/api/settings').then(r=>r.json()).then(data=>{
         document.getElementById('dt_current').textContent = data.dt;
@@ -200,9 +241,10 @@ function fetchSettings() {
                 zMax: data.MAX_Z
             };
             updateSimBox(realBoxSize);
+            
             }
         }
-
+        updateSimTimeSlider(data);
         // Update pause state
         paused = data.paused;
         updatePauseButton(paused);

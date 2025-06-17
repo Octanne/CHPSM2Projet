@@ -28,12 +28,13 @@ class Particle {
     Vector3D velocity;
     Vector3D acceleration;
     float mass;
+    float masseVolumique;
     int id;
     static int id_counter; // Identifiant unique pour chaque particule
     std::deque<Vector3D> history;
 public:
     Particle();
-    Particle(float x, float y, float z, float vx, float vy, float vz, float mass);
+    Particle(float x, float y, float z, float vx, float vy, float vz, float mass, float masseVolumique = 1.0f);
     ~Particle();
 
     // Accesseurs
@@ -41,6 +42,8 @@ public:
     float y() const;
     float z() const;
     float getMass() const;
+    float getMasseVolumique() const;
+    void setMasseVolumique(float v);
     int getId() const;
     Vector3D getPosition() const;
     Vector3D getVelocity() const;
