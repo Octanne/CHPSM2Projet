@@ -78,6 +78,14 @@ def api_resume():
     requests.post(f"{API_URL}/resume")
     return "", 204
 
+@app.route("/api/rewind", methods=["POST"])
+def api_rewind():
+    try:
+        r = requests.post(f"{API_URL}/rewind")
+        return (r.text, r.status_code, r.headers.items())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     class No200Filter(logging.Filter):
         def filter(self, record):

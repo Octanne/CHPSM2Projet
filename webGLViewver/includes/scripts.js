@@ -175,33 +175,6 @@ function fetchParticles() {
 }
 
 
-   
-const simTimeSlider = document.getElementById('simTimeSlider');
-const simTimeLabel = document.getElementById('simTimeLabel');
-
-function updateSimTimeSlider(settings) {
-    // settings.t_total et settings.current_time doivent être définis
-    simTimeSlider.max = Math.round(settings.t_total);
-    simTimeSlider.value = Math.round(settings.current_time);
-    simTimeLabel.textContent = `t = ${settings.current_time}`;
-}
-
-// Quand on bouge le curseur, on met à jour le temps de la simulation
-simTimeSlider.oninput = function() {
-    simTimeLabel.textContent = `t = ${this.value}`;
-};
-simTimeSlider.onchange = function() {
-    // On envoie la nouvelle valeur à l'API
-    fetch('/api/settings', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ current_time: parseFloat(this.value) })
-    }).then(() => {
-        fetchParticles();
-        fetchSettings();
-    });
-};
-
 function fetchSettings() {
     fetch('/api/settings').then(r=>r.json()).then(data=>{
         document.getElementById('dt_current').textContent = data.dt;
@@ -244,7 +217,6 @@ function fetchSettings() {
             
             }
         }
-        updateSimTimeSlider(data);
         // Update pause state
         paused = data.paused;
         updatePauseButton(paused);
@@ -495,6 +467,14 @@ scaleForm.onsubmit = function(e) {
     e.preventDefault();
     updateScaleFactorValues();
 }
+
+document.getElementById('rewindBtn').onclick = function() {
+    fetch('/api/rewind', {method: 'POST'}).then(() => {
+        fetchSettings();
+        fetchParticles();
+    });
+};
+
 
 // Initialisation des valeurs d'échelle à l'ouverture
 updateScaleOverlayInputs();

@@ -31,6 +31,16 @@ void APIRest::start(int port) {
             res.set_content(j.dump(), "application/json");
         });
 
+        server.Post("/rewind", [this](const httplib::Request&, httplib::Response& res) {
+            std::lock_guard<std::mutex> lock(mtx);
+            float rewind_time = std::max(0.f, settings.current_time - 5.0f);
+            for (auto& p : particles) {
+                p.restoreState(rewind_time);
+            }
+            settings.current_time = rewind_time;
+            res.status = 200;
+        });
+
         // POST /particles
         server.Post("/particles", [this](const httplib::Request& req, httplib::Response& res) {
             std::lock_guard<std::mutex> lock(mtx);

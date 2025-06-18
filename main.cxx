@@ -115,6 +115,7 @@ int main(int argc, char *argv[]) {
                 #pragma omp parallel for 
                 for (auto &p : particles) {
                     updateParticleState(p, tree, settings.dt);
+                    p.saveState(settings.current_time);
                 }
                 settings.current_time += settings.dt;
             }

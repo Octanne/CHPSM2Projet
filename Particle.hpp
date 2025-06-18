@@ -21,7 +21,11 @@ struct Vector3D {
     Vector3D &operator/=(float scalar) { x /= scalar; y /= scalar; z /= scalar; return *this; }
     float norm() const { return std::sqrt(x * x + y * y + z * z); }
 };
-
+struct ParticleState {
+    Vector3D position;
+    Vector3D velocity;
+    float time;
+};
 // Classe représentant une particule en 3D
 class Particle {
     Vector3D position;
@@ -32,6 +36,8 @@ class Particle {
     int id;
     static int id_counter; // Identifiant unique pour chaque particule
     std::deque<Vector3D> history;
+    std::deque<ParticleState> state_history;
+    
 public:
     Particle();
     Particle(float x, float y, float z, float vx, float vy, float vz, float mass, float masseVolumique = 1.0f);
@@ -47,6 +53,8 @@ public:
     int getId() const;
     Vector3D getPosition() const;
     Vector3D getVelocity() const;
+    void saveState(float time);
+    bool restoreState(float target_time);
 
     // Réinitialise l'accélération pour la nouvelle itération
     void resetAcceleration();

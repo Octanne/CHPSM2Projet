@@ -89,4 +89,28 @@ void Particle::drawGL() const {
     #endif
 }
 
+void Particle::saveState(float time) {
+    state_history.push_back({position, velocity, time});
+    // On garde seulement les 5 dernières secondes
+    /*while (!state_history.empty() && (time - state_history.front().time) > 40.0f) {
+        state_history.pop_front();
+    }*/
+}
+
+bool Particle::restoreState(float target_time) {
+    if (state_history.empty()) return false;
+    // Cherche le dernier état <= target_time
+    for (auto it = state_history.rbegin(); it != state_history.rend(); ++it) {
+        if (it->time <= target_time) {
+            position = it->position;
+            velocity = it->velocity;
+            return true;
+        }
+    }
+    // Si aucun état trouvé, restaure le plus ancien
+    position = state_history.front().position;
+    velocity = state_history.front().velocity;
+    return false;
+}
+
 int Particle::id_counter = 0;

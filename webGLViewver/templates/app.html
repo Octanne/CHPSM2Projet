@@ -232,12 +232,15 @@
                 </svg>
             </span>
         </button>
-        <div id="simTimeBarContainer" style="width: 80%; margin: 20px auto;">
-            <input type="range" id="simTimeSlider" min="0" max="100" value="0" step="1" style="width: 100%;">
-            <div style="text-align:center;">
-                <span id="simTimeLabel">t = 0</span>
-            </div>
-        </div>
+        <button id="rewindBtn" title="Retour 5s">
+            <span class="icon">
+                <!-- Icône rewind -->
+                <svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;">
+                    <polygon points="13,4 5,10 13,16"/>
+                    <rect x="15" y="4" width="2" height="12"/>
+                </svg>
+            </span>
+        </button>
     </div>
     <!-- Scene de rendu WebGL -->
     <canvas id="scene"></canvas>
