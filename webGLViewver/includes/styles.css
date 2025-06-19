@@ -90,6 +90,11 @@ h2 {
     outline: none;
 }
 
+#bottomright-overlays-container > #overlay-render > #renderForm > .form-row > input[type=number],
+#bottomright-overlays-container > #overlay-render > #renderForm > .form-row > select {
+    text-align: center;
+}
+
 #rewind_settings > label > input[type=number] {
     width:60px; 
     border-radius:4px;
@@ -418,7 +423,7 @@ button:hover {
     background: #23272f;
     color: #f3f3f3;
     transition: border 0.2s;
-    text-align: right;
+    text-align: center;
 }
 
 .scale-range-row input[type=number]:focus {
@@ -691,3 +696,17 @@ button:hover {
     min-width: 16px;
     text-align: left;
 }
+
+/* Supprime les spinners sur Chrome, Safari, Edge */
+.custom-number::-webkit-inner-spin-button,
+.custom-number::-webkit-outer-spin-button {
+  opacity: 1; /* si tu veux les voir, sinon passe à 0 ou display: none */
+  margin-left: 5px; /* parfois aide à espacer légèrement */
+}
+
+/* Supprime les spinners sur Firefox */
+.custom-number {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
