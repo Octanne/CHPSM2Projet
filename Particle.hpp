@@ -33,6 +33,7 @@ class Particle {
     Vector3D acceleration;
     float mass;
     float masseVolumique;
+    std::string colorHex; // Couleur de la particule en hexadécimal
     int id;
     static int id_counter; // Identifiant unique pour chaque particule
     std::deque<Vector3D> history;
@@ -40,7 +41,7 @@ class Particle {
     
 public:
     Particle();
-    Particle(float x, float y, float z, float vx, float vy, float vz, float mass, float masseVolumique = 1.0f);
+    Particle(float x, float y, float z, float vx, float vy, float vz, float mass, float masseVolumique = 1.0f, std::string colorHex = "");
     ~Particle();
 
     // Accesseurs
@@ -49,7 +50,10 @@ public:
     float z() const;
     float getMass() const;
     float getMasseVolumique() const;
+    std::string getColorHex() const;
+    
     void setMasseVolumique(float v);
+    void setColorHex(const std::string &color);
     int getId() const;
     Vector3D getPosition() const;
     Vector3D getVelocity() const;

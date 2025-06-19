@@ -8,21 +8,23 @@ sun_mass = 1.0e11  # arbitrary mass unit, like your code
 sun_x = 500.0
 sun_y = 500.0
 
-# Planets data: (radius, mass, angle_deg, name, inclination_deg)
-# Planets data: (radius, mass, angle_deg, name, inclination_deg, masseVolumique)
+# Planets data: (radius, mass, angle_deg, name, inclination_deg, masseVolumique, colorHex)
+# Inclination is in degrees, mass_volumique is in kg/m^3
+# Color is a hex string for visualization purposes
+# You can add a color field if needed for visualization
 planets_data = [
-    # (radius, mass, angle_deg, name, inclination_deg, masseVolumique)
-    (50.0, 2.0e3,   0.0,   "Mercury", 0.0,   5427),   # kg/m^3
-    (80.0, 3.0e3,  30.0,   "Venus", 3.39,    5243),
-    (120.0, 4.0e3, 60.0,   "Earth", 0.0,     5514),
-    (160.0, 6.0e3, 120.0,  "Mars", 0.0,      3933),
-    (250.0, 8.0e3, 180.0,  "Jupiter", 0.0,   1326),
-    (350.0, 5.0e3, 240.0,  "Saturn", 0.0,    687),
-    (420.0, 4.0e3, 300.0,  "Uranus", 0.0,    1271),
-    (460.0, 4.0e3, 330.0,  "Neptune", 0.0,   1638),
+    # (radius, mass, angle_deg, name, inclination_deg, masseVolumique, colorHex)
+    (50.0, 2.0e3,   0.0,   "Mercury", 0.0,   5427, "#ffcc00"),
+    (80.0, 3.0e3,  30.0,   "Venus", 3.39,    5243, "#ff9900"),
+    (120.0, 4.0e3, 60.0,   "Earth", 0.0,     5514, "#3399ff"),
+    (160.0, 6.0e3, 120.0,  "Mars", 0.0,      3933, "#ff3300"),
+    (250.0, 8.0e3, 180.0,  "Jupiter", 0.0,   1326, "#ff6600"),
+    (350.0, 5.0e3, 240.0,  "Saturn", 0.0,    687, "#ff9933"),
+    (420.0, 4.0e3, 300.0,  "Uranus", 0.0,    1271, "#66ccff"),
+    (460.0, 4.0e3, 330.0,  "Neptune", 0.0,   1638, "#3399cc"),
 ]
 
-def add_planet(r, mass, angle_deg, name, inclination_deg, mass_volumique=None):
+def add_planet(r, mass, angle_deg, name, inclination_deg, mass_volumique=None, color_hex=None):
     angle = math.radians(angle_deg)
     inclination = math.radians(inclination_deg)
     px = sun_x + r * math.cos(angle)
@@ -43,7 +45,8 @@ def add_planet(r, mass, angle_deg, name, inclination_deg, mass_volumique=None):
         "vy": vy,
         "vz": vz,
         "mass": mass,
-        "masseVolumique": mass_volumique
+        "masseVolumique": mass_volumique,
+        "colorHex": color_hex
     }
 
 def init_particles():
@@ -59,8 +62,8 @@ def init_particles():
         "mass": sun_mass,
         "masseVolumique": 1408  # arbitrary density for the Sun
     })
-    for r, mass, angle, name, incl, masse_volumique in planets_data:
-        particles.append(add_planet(r, mass, angle, name, incl, masse_volumique))
+    for r, mass, angle, name, incl, masse_volumique, color_hex in planets_data:
+        particles.append(add_planet(r, mass, angle, name, incl, masse_volumique, color_hex))
     return particles
 
 if __name__ == "__main__":

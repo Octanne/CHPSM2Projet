@@ -8,7 +8,8 @@
     "vy": 0.0,
     "vz": 0.0,
     "mass": 1.989e30,
-    "masseVolumique": 1408
+    "masseVolumique": 1408,
+    "colorHex": "#ffff00"
   },
   {
     "name": "Mercury",
@@ -19,7 +20,8 @@
     "vy": 47360.0,
     "vz": 0.0,
     "mass": 0.33011e24,
-    "masseVolumique": 5430
+    "masseVolumique": 5430,
+    "colorHex": "#ffcc00"
   },
   {
     "name": "Venus",
@@ -30,7 +32,8 @@
     "vy": 35020.0,
     "vz": 0.0,
     "mass": 4.8675e24,
-    "masseVolumique": 5243
+    "masseVolumique": 5243,
+    "colorHex": "#ff9900"
   },
   {
     "name": "Earth",
@@ -41,7 +44,8 @@
     "vy": 29780.0,
     "vz": 0.0,
     "mass": 5.9724e24,
-    "masseVolumique": 5515
+    "masseVolumique": 5515,
+    "colorHex": "#00ccff"
   },
   {
     "name": "Mars",
@@ -52,7 +56,8 @@
     "vy": 24070.0,
     "vz": 0.0,
     "mass": 0.64171e24,
-    "masseVolumique": 3934
+    "masseVolumique": 3934,
+    "colorHex": "#ff3300"
   },
   {
     "name": "Jupiter",
@@ -63,7 +68,8 @@
     "vy": 13000.0,
     "vz": 0.0,
     "mass": 1898.19e24,
-    "masseVolumique": 1326
+    "masseVolumique": 1326,
+    "colorHex": "#ff9900"
   },
   {
     "name": "Saturn",
@@ -74,7 +80,8 @@
     "vy": 9680.0,
     "vz": 0.0,
     "mass": 568.34e24,
-    "masseVolumique": 687
+    "masseVolumique": 687,
+    "colorHex": "#ffcc99"
   },
   {
     "name": "Uranus",
@@ -85,7 +92,8 @@
     "vy": 6800.0,
     "vz": 0.0,
     "mass": 86.813e24,
-    "masseVolumique": 1271
+    "masseVolumique": 1271,
+    "colorHex": "#99ccff"
   },
   {
     "name": "Neptune",
@@ -96,6 +104,7 @@
     "vy": 5430.0,
     "vz": 0.0,
     "mass": 102.413e24,
-    "masseVolumique": 1638
+    "masseVolumique": 1638,
+    "colorHex": "#3399cc"
   }
 ]
