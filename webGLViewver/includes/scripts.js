@@ -560,6 +560,51 @@ if (toggleBoxBtn) {
     updateToggleBoxBtnText();
 }
 
+// --- Drag & Drop pour l'overlay timeline ---
+const overlayTimeline = document.getElementById('overlay-timeline');
+let isDraggingTimeline = false;
+let dragOffsetX = 0, dragOffsetY = 0;
+
+overlayTimeline.addEventListener('mousedown', function(e) {
+    // Seulement bouton gauche
+    if (e.button !== 0) return;
+    isDraggingTimeline = true;
+    overlayTimeline.classList.add('dragging');
+    // Calculer l'offset entre la souris et le coin supérieur gauche de l'overlay
+    const rect = overlayTimeline.getBoundingClientRect();
+    dragOffsetX = e.clientX - rect.left;
+    dragOffsetY = e.clientY - rect.top;
+    // Désactiver la transition CSS pour un déplacement fluide
+    overlayTimeline.style.transition = 'none';
+    // Pour éviter la sélection de texte
+    document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', function(e) {
+    if (!isDraggingTimeline) return;
+    // Calculer la nouvelle position
+    let left = e.clientX - dragOffsetX;
+    let top = e.clientY - dragOffsetY;
+    // Limiter dans la fenêtre
+    left = Math.max(0, Math.min(window.innerWidth - overlayTimeline.offsetWidth, left));
+    top = Math.max(0, Math.min(window.innerHeight - overlayTimeline.offsetHeight, top));
+    overlayTimeline.style.left = left + 'px';
+    overlayTimeline.style.top = top + 'px';
+    overlayTimeline.style.right = 'auto';
+    overlayTimeline.style.bottom = 'auto';
+    overlayTimeline.style.transform = 'none';
+    overlayTimeline.style.position = 'fixed';
+});
+
+document.addEventListener('mouseup', function(e) {
+    if (isDraggingTimeline) {
+        isDraggingTimeline = false;
+        overlayTimeline.classList.remove('dragging');
+        overlayTimeline.style.transition = '';
+        document.body.style.userSelect = '';
+    }
+});
+
 // Initialize the application
 init();
 // Fetch initial data

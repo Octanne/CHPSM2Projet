@@ -710,3 +710,8 @@ button:hover {
   appearance: textfield;
 }
 
+#overlay-timeline.dragging {
+    cursor: move !important;
+    user-select: none;
+}
+
