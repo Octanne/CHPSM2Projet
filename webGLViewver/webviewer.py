@@ -81,7 +81,8 @@ def api_resume():
 @app.route("/api/rewind", methods=["POST"])
 def api_rewind():
     try:
-        r = requests.post(f"{API_URL}/rewind")
+        data = request.json
+        r = requests.post(f"{API_URL}/rewind", json=data)
         return (r.text, r.status_code, r.headers.items())
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -130,13 +130,24 @@ function updateSimBox(box) {
 function updatePauseButton(paused) {
     const pauseBtnText = document.getElementById('pauseBtnText');
     const pauseIcon = document.getElementById('pauseIcon');
+    const pauseIcon2 = document.getElementById('playIcon');
     if (paused) {
         pauseBtnText.textContent = "Reprendre";
         pauseIcon.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><polygon points="5,3 17,10 5,17"/></svg>`;
+        pauseIcon2.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><polygon points="5,3 17,10 5,17"/></svg>`;
     } else {
         pauseBtnText.textContent = "Pause";
         pauseIcon.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="4" height="14"/><rect x="12" y="3" width="4" height="14"/></svg>`;
+        pauseIcon2.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="4" height="14"/><rect x="12" y="3" width="4" height="14"/></svg>`;
     }
+    // We do the button in the actions bar timeline
+    const pauseBtn = document.getElementById('pauseBtn');
+    if (paused) {
+        pauseBtn.title = "Reprendre la simulation";
+    } else {
+        pauseBtn.title = "Mettre en pause la simulation";
+    }
+    // We update the logo
 
     checkIfIntervalUpdateNeedToRegister();
 }
@@ -279,6 +290,9 @@ document.getElementById('boxForm').onsubmit = function(e){
 document.getElementById('pauseBtn').onclick = function(){
     fetch(paused ? '/api/resume' : '/api/pause', {method:'POST'}).then(()=>fetchSettings());
 }; 
+document.getElementById('playBtn').onclick = function(){
+    fetch(paused ? '/api/resume' : '/api/pause', {method:'POST'}).then(()=>fetchSettings());
+}; 
 document.getElementById('closeBtn').onclick = function() {
     if (confirm("Voulez-vous vraiment fermer l'application ?")) {
         if (particlesInterval) clearInterval(particlesInterval);
@@ -291,6 +305,12 @@ document.getElementById('closeBtn').onclick = function() {
 
 // Event listeners for download and upload buttons
 document.getElementById('downloadParticlesBtn').onclick = function() {
+    downloadParticlesCurrentStates();
+};
+document.getElementById('recordBtn').onclick = function() {
+    downloadParticlesCurrentStates();
+};
+function downloadParticlesCurrentStates() {
     fetch('/api/particles').then(r => r.json()).then(data => {
         const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
         const url = URL.createObjectURL(blob);
@@ -305,6 +325,7 @@ document.getElementById('downloadParticlesBtn').onclick = function() {
         }, 100);
     });
 };
+
 document.getElementById('uploadParticlesBtn').onclick = function() {
     document.getElementById('uploadParticlesInput').click();
 };
@@ -471,7 +492,17 @@ scaleForm.onsubmit = function(e) {
 document.getElementById('rewindBtn').onclick = function() {
     fetch('/api/rewind', {method: 'POST'}).then(() => {
         fetchSettings();
-        fetchParticles();
+        // Récupère la valeur de rewind_time depuis l'input et l'envoie dans le body
+        const rewindTimeInput = document.getElementById('rewind_time_input');
+        const rewind_time = rewindTimeInput?.value ? parseFloat(rewindTimeInput.value) : 5.0;
+        fetch('/api/rewind', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rewind_time: rewind_time })
+        }).then(() => {
+            fetchSettings();
+            fetchParticles();
+        });
     });
 };
 

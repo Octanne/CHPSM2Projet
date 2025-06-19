@@ -437,8 +437,7 @@ button:hover {
 }
 
 .hide-gui #bottomright-overlays-container,
-.hide-gui #overlays-container,
-.hide-gui #overlay-timeline {
+.hide-gui #overlays-container {
     display: none !important;
 }
 
