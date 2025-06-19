@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
     std::vector<Particle> particles = initParticles(N);
 
     // Paramètres de simulation partagés
-    SimulationSettings settings{simulMaxTime, 0.5, N, 0.f, false, Y_MAX, X_MAX, Z_MAX, Y_MIN, X_MIN, Z_MIN};
+    SimulationSettings settings{simulMaxTime, 0.5, N, 0.f, -1.0f, false, Y_MAX, X_MAX, Z_MAX, Y_MIN, X_MIN, Z_MIN};
     std::mutex mtx;
     std::atomic<bool> paused(pausedD);
     std::atomic<bool> closed(false);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
                 #pragma omp parallel for 
                 for (auto &p : particles) {
                     updateParticleState(p, tree, settings.dt);
-                    p.saveState(settings.current_time);
+                    p.saveState(settings.current_time, settings.rewind_max_history);
                 }
                 settings.current_time += settings.dt;
             }
@@ -205,15 +205,16 @@ int main(int argc, char *argv[]) {
 
             // Mise à jour de la simulation
             if (!paused) {
-                #pragma omp parallel for 
-                for (auto &p : particles) {
-                    updateParticleState(p, tree, settings.dt);
-                }
                 tree.clear();
                 for (const auto &p : particles) {
                     tree.insert(&p);
                 }
-                simulationTime += settings.dt;
+                #pragma omp parallel for 
+                for (auto &p : particles) {
+                    updateParticleState(p, tree, settings.dt);
+                    p.saveState(settings.current_time, settings.rewind_max_history);
+                }
+                settings.current_time += settings.dt;
                 if (simulationTime > settings.t_total)
                     simulationTime = 0.f;
             }

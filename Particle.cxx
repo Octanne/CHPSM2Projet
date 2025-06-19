@@ -89,12 +89,12 @@ void Particle::drawGL() const {
     #endif
 }
 
-void Particle::saveState(float time) {
+void Particle::saveState(float time, float rewind_max_history) {
     state_history.push_back({position, velocity, time});
     // On garde seulement les 5 dernières secondes
-    /*while (!state_history.empty() && (time - state_history.front().time) > 40.0f) {
+    while (rewind_max_history != -1 && !state_history.empty() && (time - state_history.front().time) > rewind_max_history) {
         state_history.pop_front();
-    }*/
+    }
 }
 
 bool Particle::restoreState(float target_time) {

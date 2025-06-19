@@ -53,7 +53,7 @@ public:
     int getId() const;
     Vector3D getPosition() const;
     Vector3D getVelocity() const;
-    void saveState(float time);
+    void saveState(float time, float rewind_max_history);
     bool restoreState(float target_time);
 
     // Réinitialise l'accélération pour la nouvelle itération

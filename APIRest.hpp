@@ -15,6 +15,7 @@ struct SimulationSettings {
     float dt;
     int nb_particles;
     float current_time;
+    float rewind_max_history; // Durée maximale de l'historique de position des particules
     bool closed;
     float MAX_Y, MAX_X, MAX_Z;
     float MIN_Y, MIN_X, MIN_Z;

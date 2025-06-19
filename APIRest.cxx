@@ -31,9 +31,11 @@ void APIRest::start(int port) {
             res.set_content(j.dump(), "application/json");
         });
 
-        server.Post("/rewind", [this](const httplib::Request&, httplib::Response& res) {
+        server.Post("/rewind", [this](const httplib::Request& req, httplib::Response& res) {
             std::lock_guard<std::mutex> lock(mtx);
-            float rewind_time = std::max(0.f, settings.current_time - 5.0f);
+            auto j = json::parse(req.body);
+            float rewind_delta = j.value("rewind_time", 5.0f);
+            float rewind_time = std::max(0.f, settings.current_time - rewind_delta);
             for (auto& p : particles) {
                 p.restoreState(rewind_time);
             }
@@ -127,6 +129,7 @@ void APIRest::start(int port) {
                 {"nb_particles", settings.nb_particles},
                 {"paused", paused.load()},
                 {"current_time", settings.current_time},
+                {"rewind_max_history", settings.rewind_max_history},
                 {"closed", settings.closed},
                 {"MAX_Y", settings.MAX_Y},
                 {"MAX_X", settings.MAX_X},
@@ -146,6 +149,7 @@ void APIRest::start(int port) {
                 if (j.contains("t_total")) settings.t_total = j["t_total"];
                 if (j.contains("dt")) settings.dt = j["dt"];
                 if (j.contains("current_time")) settings.current_time = j["current_time"];
+                if (j.contains("rewind_max_history")) settings.rewind_max_history = j["rewind_max_history"];
                 bool update_bornes = false;
                 if (j.contains("MAX_Y")) { settings.MAX_Y = j["MAX_Y"]; update_bornes = true; }
                 if (j.contains("MAX_X")) { settings.MAX_X = j["MAX_X"]; update_bornes = true; }

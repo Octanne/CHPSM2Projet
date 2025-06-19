@@ -13,9 +13,9 @@ let scaleParams = {
     zMin: 0, zMax: 1000
 };
 let realBoxSize = {
-    xMin: 0, xMax: 1000,
-    yMin: 0, yMax: 1000,
-    zMin: 0, zMax: 1000
+    xMin: -1, xMax: -1,
+    yMin: -1, yMax: -1,
+    zMin: -1, zMax: -1
 };
 
 function resize() {
