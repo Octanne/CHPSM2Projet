@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Sun",
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 0.0,
+    "vz": 0.0,
+    "mass": 1.989e30,
+    "masseVolumique": 1408,
+    "colorHex": "#ffff00"
+  },
+  {
+    "name": "Mercury",
+    "x": 5.79e10,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 47870.0,
+    "vz": 0.0,
+    "mass": 3.3e23,
+    "masseVolumique": 5427,
+    "colorHex": "#ffcc00"
+  },
+  {
+    "name": "Venus",
+    "x": 1.08e11,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 35020.0,
+    "vz": 0.0,
+    "mass": 4.87e24,
+    "masseVolumique": 5243,
+    "colorHex": "#ff9900"
+  },
+  {
+    "name": "Earth",
+    "x": 1.496e11,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 29780.0,
+    "vz": 0.0,
+    "mass": 5.97e24,
+    "masseVolumique": 5514,
+    "colorHex": "#3399ff"
+  },
+  {
+    "name": "Mars",
+    "x": 2.279e11,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 24070.0,
+    "vz": 0.0,
+    "mass": 6.42e23,
+    "masseVolumique": 3933,
+    "colorHex": "#ff3300"
+  },
+  {
+    "name": "Jupiter",
+    "x": 7.785e11,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 13070.0,
+    "vz": 0.0,
+    "mass": 1.9e27,
+    "masseVolumique": 1326,
+    "colorHex": "#ff6600"
+  },
+  {
+    "name": "Saturn",
+    "x": 1.434e12,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 9680.0,
+    "vz": 0.0,
+    "mass": 5.68e26,
+    "masseVolumique": 687,
+    "colorHex": "#ff9933"
+  },
+  {
+    "name": "Uranus",
+    "x": 2.871e12,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 6800.0,
+    "vz": 0.0,
+    "mass": 8.68e25,
+    "masseVolumique": 1271,
+    "colorHex": "#66ccff"
+  },
+  {
+    "name": "Neptune",
+    "x": 4.495e12,
+    "y": 0.0,
+    "z": 0.0,
+    "vx": 0.0,
+    "vy": 5430.0,
+    "vz": 0.0,
+    "mass": 1.02e26,
+    "masseVolumique": 1638,
+    "colorHex": "#3399cc"
+  }
+]
