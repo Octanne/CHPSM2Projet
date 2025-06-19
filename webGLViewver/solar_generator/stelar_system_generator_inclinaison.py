@@ -9,18 +9,20 @@ sun_x = 500.0
 sun_y = 500.0
 
 # Planets data: (radius, mass, angle_deg, name, inclination_deg)
+# Planets data: (radius, mass, angle_deg, name, inclination_deg, masseVolumique)
 planets_data = [
-    (50.0, 2.0e3,   0.0,   "Mercury", 0.0),
-    (80.0, 3.0e3,  30.0,   "Venus", 3.39),
-    (120.0, 4.0e3, 60.0,   "Earth", 0.0),
-    (160.0, 6.0e3, 120.0,  "Mars", 0.0),
-    (250.0, 8.0e3, 180.0,  "Jupiter", 0.0),
-    (350.0, 5.0e3, 240.0,  "Saturn", 0.0),
-    (420.0, 4.0e3, 300.0,  "Uranus", 0.0),
-    (460.0, 4.0e3, 330.0,  "Neptune", 0.0),
+    # (radius, mass, angle_deg, name, inclination_deg, masseVolumique)
+    (50.0, 2.0e3,   0.0,   "Mercury", 0.0,   5427),   # kg/m^3
+    (80.0, 3.0e3,  30.0,   "Venus", 3.39,    5243),
+    (120.0, 4.0e3, 60.0,   "Earth", 0.0,     5514),
+    (160.0, 6.0e3, 120.0,  "Mars", 0.0,      3933),
+    (250.0, 8.0e3, 180.0,  "Jupiter", 0.0,   1326),
+    (350.0, 5.0e3, 240.0,  "Saturn", 0.0,    687),
+    (420.0, 4.0e3, 300.0,  "Uranus", 0.0,    1271),
+    (460.0, 4.0e3, 330.0,  "Neptune", 0.0,   1638),
 ]
 
-def add_planet(r, mass, angle_deg, name, inclination_deg):
+def add_planet(r, mass, angle_deg, name, inclination_deg, mass_volumique=None):
     angle = math.radians(angle_deg)
     inclination = math.radians(inclination_deg)
     px = sun_x + r * math.cos(angle)
@@ -40,7 +42,8 @@ def add_planet(r, mass, angle_deg, name, inclination_deg):
         "vx": vx,
         "vy": vy,
         "vz": vz,
-        "mass": mass
+        "mass": mass,
+        "masseVolumique": mass_volumique
     }
 
 def init_particles():
@@ -53,10 +56,11 @@ def init_particles():
         "vx": 0.0,
         "vy": 0.0,
         "vz": 0.0,
-        "mass": sun_mass
+        "mass": sun_mass,
+        "masseVolumique": 1408  # arbitrary density for the Sun
     })
-    for r, mass, angle, name, incl in planets_data:
-        particles.append(add_planet(r, mass, angle, name, incl))
+    for r, mass, angle, name, incl, masse_volumique in planets_data:
+        particles.append(add_planet(r, mass, angle, name, incl, masse_volumique))
     return particles
 
 if __name__ == "__main__":
