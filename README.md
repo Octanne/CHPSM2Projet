@@ -29,9 +29,9 @@
     python3 webviewer.py
     ```
 
-## Compile, Make, and Run the Compute Server App
+## Compile with Make the Compute Server
 
-0. **Preparation ROMEO:**
+1. **Preparation for ROMEO:**
     ```bash
     spack install patch
     spack load patch
@@ -39,25 +39,29 @@
     spack load boost@1.86.0 +program_options +chrono +random %aocc
     ```
 
-1. **Compile the application:**
+2. **Compile the application:**
 
-    For romeo :
+    On ROMEO:
     ```bash
     make headless romeo
     ```
 
-    Else without romeo spack :
+    Else without ROMEO spack:
     ```bash
     make headless
     ```
 
-2. **Run the compute server:**
-    For romeo :
-    ```bash
-    export LD_LIBRARY_PATH=$(spack location -i boost@1.86.0 +program_options +chrono +random %aocc)/lib:$LD_LIBRARY_PATH
-    bin/main --particles 100 --port-api 8080
-    ```
-    Else without romeo spack :
-    ```bash
-    bin/main --particles 100 --port-api 8080
-    ```
+## Start the Compute Server
+
+1. **Launching the compute server:**
+
+   On ROMEO :
+   ```bash
+   export LD_LIBRARY_PATH=$(spack location -i boost@1.86.0 +program_options +chrono +random %aocc)/lib:$LD_LIBRARY_PATH
+   bin/main --particles 100 --port-api 8080
+   ```
+    
+   Else without ROMEO spack :
+   ```bash
+   bin/main --particles 100 --port-api 8080
+   ```
