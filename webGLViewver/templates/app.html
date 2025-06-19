@@ -241,6 +241,23 @@
                 </svg>
             </span>
         </button>
+        <!-- Ajout des champs pour l'historique et le pas du rewind -->
+        <div id="rewind_settings" style="display: flex; flex-direction: column; gap: 4px; margin-left: 18px;">
+            <div class="timeline-row">
+                <label class="timeline-label" for="rewind_max_history_input">
+                    Durée d'historique
+                </label>
+                <input type="number" id="rewind_max_history_input" min="1" step="1" value="40">
+                <span class="timeline-unit">s</span>
+            </div>
+            <div class="timeline-row">
+                <label class="timeline-label" for="rewind_time_input">
+                    Pas du rewind
+                </label>
+                <input type="number" id="rewind_time_input" min="0.1" step="0.1" value="5">
+                <span class="timeline-unit">s</span>
+            </div>
+        </div>
     </div>
     <!-- Scene de rendu WebGL -->
     <canvas id="scene"></canvas>

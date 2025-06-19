@@ -131,23 +131,21 @@ function updatePauseButton(paused) {
     const pauseBtnText = document.getElementById('pauseBtnText');
     const pauseIcon = document.getElementById('pauseIcon');
     const pauseIcon2 = document.getElementById('playIcon');
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
     if (paused) {
         pauseBtnText.textContent = "Reprendre";
+        pauseBtn.title = "Reprendre la simulation";
+        playBtn.title = "Reprendre la simulation";
         pauseIcon.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><polygon points="5,3 17,10 5,17"/></svg>`;
         pauseIcon2.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><polygon points="5,3 17,10 5,17"/></svg>`;
     } else {
         pauseBtnText.textContent = "Pause";
+        playBtn.title = "Mettre en pause la simulation";
+        pauseBtn.title = "Mettre en pause la simulation";
         pauseIcon.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="4" height="14"/><rect x="12" y="3" width="4" height="14"/></svg>`;
         pauseIcon2.innerHTML = `<svg viewBox="0 0 20 20" fill="#23272f" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="3" width="4" height="14"/><rect x="12" y="3" width="4" height="14"/></svg>`;
     }
-    // We do the button in the actions bar timeline
-    const pauseBtn = document.getElementById('pauseBtn');
-    if (paused) {
-        pauseBtn.title = "Reprendre la simulation";
-    } else {
-        pauseBtn.title = "Mettre en pause la simulation";
-    }
-    // We update the logo
 
     checkIfIntervalUpdateNeedToRegister();
 }
@@ -189,9 +187,13 @@ function fetchParticles() {
 function fetchSettings() {
     fetch('/api/settings').then(r=>r.json()).then(data=>{
         document.getElementById('dt_current').textContent = data.dt;
+        document.getElementById('dt_current').title = "Delta Time (dt) : " + data.dt;
         document.getElementById('t_total_current').textContent = data.t_total;
+        document.getElementById('t_total_current').title = "Temps total de la simulation (t_total) : " + data.t_total;
         document.getElementById('nb_particles_current').textContent = data.nb_particles;
+        document.getElementById('nb_particles_current').title = "Nombre de particules (nb_particles) : " + data.nb_particles;
         document.getElementById('current_time_current').textContent = data.current_time;
+        document.getElementById('current_time_current').title = "Temps actuel de la simulation (current_time) : " + data.current_time;
         
         document.getElementById('dt_input').placeholder = data.dt;
         document.getElementById('t_total_input').placeholder = data.t_total;
@@ -202,6 +204,7 @@ function fetchSettings() {
         for (const key of ["MIN_X", "MIN_Y", "MIN_Z", "MAX_X", "MAX_Y", "MAX_Z"]) {
             if (data[key] !== undefined) {
                 document.getElementById(key + "_current").textContent = data[key];
+                document.getElementById(key + "_current").title = key + " : " + data[key];
                 document.getElementById(key + "_input").placeholder = data[key];
             }
         }
@@ -231,6 +234,11 @@ function fetchSettings() {
         // Update pause state
         paused = data.paused;
         updatePauseButton(paused);
+
+        // Synchronisation des champs rewind
+        if (document.getElementById('rewind_max_history_input')) {
+            document.getElementById('rewind_max_history_input').value = data.rewind_max_history ?? 5;
+        }
     });
 }
     
@@ -374,9 +382,13 @@ document.getElementById('toggleGuiBtn').onclick = function() {
 
 function updateRenderOverlayValues() {
     document.getElementById('render_particle_size_current').textContent = particleSize;
+    document.getElementById('render_particle_size_current').title = "Taille des particules (particleSize) : " + particleSize;
     document.getElementById('render_particle_color_current').textContent = '#' + particleColor.toString(16).padStart(6, '0');
+    document.getElementById('render_particle_color_current').title = "Couleur des particules (particleColor) : #" + particleColor.toString(16).padStart(6, '0');
     document.getElementById('render_type_current').textContent = particleAsMesh ? "Sphère" : "Points";
+    document.getElementById('render_type_current').title = "Type de rendu des particules (particleAsMesh) : " + (particleAsMesh ? "Sphère" : "Points");
     document.getElementById('render_update_paused_current').textContent = dontUpdateWhenPaused ? "Non" : "Oui";
+    document.getElementById('render_update_paused_current').title = "Mettre à jour les particules lorsque la simulation est en pause (dontUpdateWhenPaused) : " + (dontUpdateWhenPaused ? "Non" : "Oui");
     // Update les valeurs des inputs avec les variables JS
     renderParticleSizeInput.placeholder = particleSize;
     renderParticleColorInput.placeholder = "#" + particleColor.toString(16).padStart(6, '0');
@@ -490,11 +502,19 @@ scaleForm.onsubmit = function(e) {
 }
 
 document.getElementById('rewindBtn').onclick = function() {
-    fetch('/api/rewind', {method: 'POST'}).then(() => {
-        fetchSettings();
-        // Récupère la valeur de rewind_time depuis l'input et l'envoie dans le body
-        const rewindTimeInput = document.getElementById('rewind_time_input');
-        const rewind_time = rewindTimeInput?.value ? parseFloat(rewindTimeInput.value) : 5.0;
+    // Récupère la valeur de rewind_time et rewind_max_history depuis les inputs
+    const rewindTimeInput = document.getElementById('rewind_time_input');
+    const rewindMaxHistoryInput = document.getElementById('rewind_max_history_input');
+    const rewind_time = rewindTimeInput?.value ? parseFloat(rewindTimeInput.value) : 5.0;
+    const rewind_max_history = rewindMaxHistoryInput?.value ? parseFloat(rewindMaxHistoryInput.value) : 5.0;
+
+    // Met à jour la taille max de l'historique si besoin
+    fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rewind_max_history: rewind_max_history })
+    }).then(() => {
+        // Puis effectue le rewind
         fetch('/api/rewind', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -506,6 +526,17 @@ document.getElementById('rewindBtn').onclick = function() {
     });
 };
 
+// Synchronisation de la taille max de l'historique à la modification du champ
+document.getElementById('rewind_max_history_input').addEventListener('change', function() {
+    const val = parseFloat(this.value);
+    if (!isNaN(val)) {
+        fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rewind_max_history: val })
+        }).then(() => fetchSettings());
+    }
+});
 
 // Initialisation des valeurs d'échelle à l'ouverture
 updateScaleOverlayInputs();
