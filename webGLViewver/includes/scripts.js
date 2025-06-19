@@ -82,15 +82,14 @@ function updateParticles(particles) {
 
     if (particleAsMesh) {
         particlesMeshses = [];
-        const sphereMaterial = new THREE.MeshStandardMaterial({ color: particleColor });
+        const sphereMaterialDft = new THREE.MeshStandardMaterial({ color: particleColor });
         displayParticles.forEach((p, i) => {
+            let sphereMaterial = sphereMaterialDft;
             if (p.colorHex?.startsWith("#")) {
+                sphereMaterial = sphereMaterialDft.clone();
                 // Si la particule a une couleur définie, on l'utilise
                 const color = parseInt(p.colorHex.replace("#", "0x"));
                 sphereMaterial.color.setHex(color);
-            } else {
-                // Sinon, on utilise la couleur par défaut
-                sphereMaterial.color.setHex(particleColor);
             }
             // 4. Taille proportionnelle
             let size = rawSizes[i] / maxRawSize * maxDisplaySize;
@@ -106,13 +105,6 @@ function updateParticles(particles) {
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(displayParticles.length * 3);
         displayParticles.forEach((p, i) => {
-            if (p.colorHex?.startsWith("#")) {
-                // Si la particule a une couleur définie, on l'utilise
-                particleColor = parseInt(p.colorHex.replace("#", "0x"));
-            } else {
-                // Sinon, on utilise la couleur par défaut
-                particleColor = 0xffff00; // Default color
-            }
             positions.set([p.x, p.y, p.z], i * 3);
         });
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
