@@ -236,8 +236,9 @@ function fetchSettings() {
         updatePauseButton(paused);
 
         // Synchronisation des champs rewind
-        if (document.getElementById('rewind_max_history_input')) {
-            document.getElementById('rewind_max_history_input').value = data.rewind_max_history ?? 5;
+        const rewindMaxHistoryInput = document.getElementById('rewind_max_history_input');
+        if (rewindMaxHistoryInput && document.activeElement !== rewindMaxHistoryInput) {
+            rewindMaxHistoryInput.value = data.rewind_max_history ?? 5;
         }
     });
 }
@@ -504,31 +505,23 @@ scaleForm.onsubmit = function(e) {
 document.getElementById('rewindBtn').onclick = function() {
     // Récupère la valeur de rewind_time et rewind_max_history depuis les inputs
     const rewindTimeInput = document.getElementById('rewind_time_input');
-    const rewindMaxHistoryInput = document.getElementById('rewind_max_history_input');
     const rewind_time = rewindTimeInput?.value ? parseFloat(rewindTimeInput.value) : 5.0;
-    const rewind_max_history = rewindMaxHistoryInput?.value ? parseFloat(rewindMaxHistoryInput.value) : 5.0;
 
-    // Met à jour la taille max de l'historique si besoin
-    fetch('/api/settings', {
+    fetch('/api/rewind', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rewind_max_history: rewind_max_history })
+        body: JSON.stringify({ rewind_time: rewind_time })
     }).then(() => {
-        // Puis effectue le rewind
-        fetch('/api/rewind', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rewind_time: rewind_time })
-        }).then(() => {
-            fetchSettings();
-            fetchParticles();
-        });
+        fetchSettings();
+        fetchParticles();
     });
 };
 
 // Synchronisation de la taille max de l'historique à la modification du champ
-document.getElementById('rewind_max_history_input').addEventListener('change', function() {
-    const val = parseFloat(this.value);
+document.getElementById('rewindForm').onsubmit = function(e) {
+    e.preventDefault();
+    const rewindMaxHistoryInput = document.getElementById('rewind_max_history_input');
+    const val = parseFloat(rewindMaxHistoryInput.value);
     if (!isNaN(val)) {
         fetch('/api/settings', {
             method: 'POST',
@@ -536,7 +529,7 @@ document.getElementById('rewind_max_history_input').addEventListener('change', f
             body: JSON.stringify({ rewind_max_history: val })
         }).then(() => fetchSettings());
     }
-});
+};
 
 // Initialisation des valeurs d'échelle à l'ouverture
 updateScaleOverlayInputs();

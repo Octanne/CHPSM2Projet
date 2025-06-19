@@ -648,7 +648,8 @@ button:hover {
     margin-left: 18px;
 }
 
-#rewind_settings .timeline-row {
+#rewind_settings .timeline-row,
+#rewind_settings .timeline-row form {
     display: flex;
     flex-direction: row;
     align-items: center;
