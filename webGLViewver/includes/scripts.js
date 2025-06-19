@@ -116,12 +116,15 @@ function updateParticles(particles) {
 
 }
 
+let showSimBox = true; // Ajout d'un état pour afficher/cacher la boîte
 function updateSimBox(box) {
     if (!box) return;
-    if (scaleEnabled) box = scaleParams; // Use scaleParams if scale is enabled
     if (simBoxHelper) {
         scene.remove(simBoxHelper);
+        simBoxHelper = null;
     }
+    if (!showSimBox) return; // Ne rien afficher si caché
+    if (scaleEnabled) box = scaleParams; // Use scaleParams if scale is enabled
     const min = new THREE.Vector3(box.xMin, box.yMin, box.zMin);
     const max = new THREE.Vector3(box.xMax, box.yMax, box.zMax);
     const box3 = new THREE.Box3(min, max);
@@ -540,6 +543,22 @@ document.getElementById('rewindForm').onsubmit = function(e) {
 
 // Initialisation des valeurs d'échelle à l'ouverture
 updateScaleOverlayInputs();
+
+// Ajout du bouton Afficher/Cacher la boîte de simulation
+const toggleBoxBtn = document.getElementById('toggleBoxBtn');
+const toggleBoxBtnText = document.getElementById('toggleBoxBtnText');
+function updateToggleBoxBtnText() {
+    toggleBoxBtnText.textContent = showSimBox ? "Invisible" : "Visible";
+    toggleBoxBtn.title = showSimBox ? "Cacher la boîte de simulation" : "Afficher la boîte de simulation";
+}
+if (toggleBoxBtn) {
+    toggleBoxBtn.onclick = function() {
+        showSimBox = !showSimBox;
+        updateToggleBoxBtnText();
+        updateSimBox(realBoxSize);
+    };
+    updateToggleBoxBtnText();
+}
 
 // Initialize the application
 init();
