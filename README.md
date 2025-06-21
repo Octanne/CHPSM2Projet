@@ -58,6 +58,8 @@
 
    On ROMEO :
    ```bash
+   romeo_load_x64cpu_env
+   spack load boost@1.86.0 +program_options +chrono +random %aocc
    export LD_LIBRARY_PATH=$(spack location -i boost@1.86.0 +program_options +chrono +random %aocc)/lib:$LD_LIBRARY_PATH
    bin/main --particles 100 --port-api 8080
    ```
