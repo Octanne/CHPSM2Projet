@@ -33,6 +33,7 @@
 
 1. **Preparation for ROMEO:**
     ```bash
+    romeo_load_x64cpu_env
     spack install patch
     spack load patch
     spack install boost@1.86.0 +program_options +chrono +random %aocc
