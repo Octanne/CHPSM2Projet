@@ -12,6 +12,9 @@
 </head>
 <body>
     <div id="top-right-btns" style="position: fixed; top: 18px; right: 24px; z-index: 1100; display: flex; gap: 10px;">
+        <button id="resetBtn" title="Réinitialiser la simulation">
+            <span id="resetBtnText">Réinitialiser</span>
+        </button>
         <button id="toggleGuiBtn" title="Afficher/Masquer l'interface">
             <span id="toggleGuiBtnText">Cacher GUI</span>
         </button>
@@ -272,6 +275,7 @@
             </div>
         </div>
     </div>
+    <div id="particleInfoPopup" style="position:fixed;display:none;z-index:2000;pointer-events:none;background:#23272f;border:1px solid #ffd369;padding:8px;border-radius:8px;color:#ffd369;min-width:140px;"></div>
     <!-- Scene de rendu WebGL -->
     <canvas id="scene"></canvas>
     <!-- Import des scripts JavaScript -->

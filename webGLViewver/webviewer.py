@@ -87,6 +87,11 @@ def api_rewind():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/reset", methods=["POST"])
+def api_reset():
+    requests.post(f"{API_URL}/reset")
+    return "", 204
+
 if __name__ == "__main__":
     class No200Filter(logging.Filter):
         def filter(self, record):

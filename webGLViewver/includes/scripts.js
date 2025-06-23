@@ -18,6 +18,13 @@ let realBoxSize = {
     zMin: -1, zMax: -1
 };
 
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredParticleId = null;
+let selectedParticleId = null;
+let latestParticlesData = [];
+let trailLine = null;
+
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -98,6 +105,7 @@ function updateParticles(particles) {
             const geometry = new THREE.SphereGeometry(size, 16, 16);
             const mesh = new THREE.Mesh(geometry, sphereMaterial);
             mesh.position.set(p.x, p.y, p.z);
+            mesh.userData.particleId = p.id;
             particlesMeshses.push(mesh);
             scene.add(mesh);
         });
@@ -189,7 +197,9 @@ function checkIfIntervalUpdateNeedToRegister() {
 
 function fetchParticles() {
     fetch('/api/particles').then(r=>r.json()).then(data=>{
+        latestParticlesData = data; // <= Stockage de la dernière frame
         updateParticles(data);
+        updateTrail(); 
     });
 }
 
@@ -596,6 +606,16 @@ document.addEventListener('mousemove', function(e) {
     overlayTimeline.style.position = 'fixed';
 });
 
+document.getElementById('resetBtn').onclick = function() {
+    if (confirm("Voulez-vous vraiment réinitialiser la simulation ? Cela effacera toutes les particules et l'historique.")) {
+        fetch('/api/reset', { method: 'POST' })
+            .then(() => {
+                // Option simple : recharge toute la page
+                location.reload();
+            });
+    }
+};
+
 document.addEventListener('mouseup', function(e) {
     if (isDraggingTimeline) {
         isDraggingTimeline = false;
@@ -605,11 +625,81 @@ document.addEventListener('mouseup', function(e) {
     }
 });
 
+function onPointerMove(event) {
+    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(particlesMeshses);
+    if (intersects.length > 0) {
+        hoveredParticleId = intersects[0].object.userData.particleId;
+        showParticleInfo(hoveredParticleId, event.clientX, event.clientY);
+    } else {
+        hoveredParticleId = null;
+        hideParticleInfo();
+    }
+    updateTrail();
+}
+
+function onPointerClick(event) {
+    if (hoveredParticleId !== null) {
+        selectedParticleId = hoveredParticleId;
+        showParticleInfo(selectedParticleId, event.clientX, event.clientY, true);
+        updateTrail();
+    } else {
+        selectedParticleId = null;
+        hideParticleInfo();
+        updateTrail();
+    }
+}
+
+function showParticleInfo(id, x, y, clicked = false) {
+    const p = latestParticlesData.find(ptc => ptc.id === id);
+    if (!p) return;
+    let html = `<b>Particule #${p.id}</b><br>`;
+    html += `Masse : ${p.mass}<br>`;
+    if (p.masseVolumique !== undefined) html += `Masse Vol. : ${p.masseVolumique}<br>`;
+    if (p.name) html += `Nom : ${p.name}<br>`;
+    if (clicked) html += "<i>(Sélectionnée)</i>";
+    const popup = document.getElementById('particleInfoPopup');
+    popup.innerHTML = html;
+    popup.style.left = `${x + 16}px`;
+    popup.style.top = `${y + 16}px`;
+    popup.style.display = 'block';
+}
+
+function hideParticleInfo() {
+    document.getElementById('particleInfoPopup').style.display = 'none';
+}
+
+function updateTrail() {
+    // Retire l'ancien trail
+    if (trailLine) {
+        scene.remove(trailLine);
+        trailLine.geometry.dispose();
+        trailLine.material.dispose();
+        trailLine = null;
+    }
+    // Affiche le trail pour la particule sélectionnée ou survolée
+    let particleIdToShow = selectedParticleId ?? hoveredParticleId;
+    if (particleIdToShow !== null && latestParticlesData) {
+        const p = latestParticlesData.find(ptc => ptc.id === particleIdToShow);
+        if (p && p.history && p.history.length > 1) {
+            const points = p.history.map(pos => new THREE.Vector3(pos.x, pos.y, pos.z));
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            trailLine = new THREE.Line(geometry, material);
+            scene.add(trailLine);
+        }
+    }
+}
+
 // Initialize the application
 init();
 // Fetch initial data
 fetchSettings();
 fetchParticles();
+renderer.domElement.addEventListener('mousemove', onPointerMove);
+renderer.domElement.addEventListener('click', onPointerClick);
 // Set intervals for periodic updates
 particlesInterval = setInterval(fetchParticles, 200);
 settingsInterval = setInterval(fetchSettings, 1000);

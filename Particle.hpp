@@ -59,6 +59,7 @@ public:
     Vector3D getVelocity() const;
     void saveState(float time, float rewind_max_history);
     bool restoreState(float target_time);
+    const std::deque<ParticleState>& getStateHistory() const;
 
     // Réinitialise l'accélération pour la nouvelle itération
     void resetAcceleration();

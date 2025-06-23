@@ -99,6 +99,7 @@ void Particle::saveState(float time, float rewind_max_history) {
     }
 }
 
+
 bool Particle::restoreState(float target_time) {
     if (state_history.empty()) return false;
     // Cherche le dernier état <= target_time
@@ -114,5 +115,10 @@ bool Particle::restoreState(float target_time) {
     velocity = state_history.front().velocity;
     return false;
 }
+
+const std::deque<ParticleState>& Particle::getStateHistory() const {
+    return state_history;
+}
+
 
 int Particle::id_counter = 0;

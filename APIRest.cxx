@@ -16,6 +16,15 @@ void APIRest::start(int port) {
             std::lock_guard<std::mutex> lock(mtx);
             json j = json::array();
             for (const auto& p : particles) {
+                // On construit l'historique de positions
+                json history = json::array();
+                for (const auto& st : p.getStateHistory()) {
+                    history.push_back({
+                        {"x", st.position.x},
+                        {"y", st.position.y},
+                        {"z", st.position.z}
+                    });
+                }
                 j.push_back({
                     {"id", p.getId()},
                     {"x", p.x()},
@@ -26,7 +35,8 @@ void APIRest::start(int port) {
                     {"vz", p.getVelocity().z},
                     {"mass", p.getMass()},
                     {"masseVolumique", p.getMasseVolumique()},
-                    {"colorHex", p.getColorHex()}
+                    {"colorHex", p.getColorHex()},
+                    {"history", history} // Ajout de l'historique ici !
                 });
             }
             res.set_content(j.dump(), "application/json");
@@ -41,6 +51,31 @@ void APIRest::start(int port) {
                 p.restoreState(rewind_time);
             }
             settings.current_time = rewind_time;
+            res.status = 200;
+        });
+
+        server.Post("/reset", [this](const httplib::Request&, httplib::Response& res) {
+            std::lock_guard<std::mutex> lock(mtx);
+
+            // Réinitialiser toutes les particules
+            for (auto& p : particles) {
+                p = Particle(); // Remet la particule à un état neuf, random (si tu veux les remettre à des positions identiques à l'initialisation)
+            }
+            // Reset settings de temps
+            settings.current_time = 0.f;
+            // Effacer l'octree
+            tree.clear();
+            // Re-créer l'octree avec les bornes initiales
+            tree.updateAttributes(
+                settings.MIN_X, settings.MIN_Y, settings.MIN_Z,
+                std::abs(settings.MAX_X - settings.MIN_X), 
+                std::abs(settings.MAX_Y - settings.MIN_Y), 
+                std::abs(settings.MAX_Z - settings.MIN_Z),
+                1
+            );
+
+            paused = true; // Peut-être utile de mettre la simu en pause après reset
+
             res.status = 200;
         });
 
