@@ -659,6 +659,8 @@ function showParticleInfo(id, x, y, clicked = false) {
     html += `Masse : ${p.mass}<br>`;
     if (p.masseVolumique !== undefined) html += `Masse Vol. : ${p.masseVolumique}<br>`;
     if (p.name) html += `Nom : ${p.name}<br>`;
+    html += `Position : (${p.x}, ${p.y}, ${p.z})<br>`;
+    html += `Vitesse : (${p.vx}, ${p.vy}, ${p.vz})<br>`;
     if (clicked) html += "<i>(Sélectionnée)</i>";
     const popup = document.getElementById('particleInfoPopup');
     popup.innerHTML = html;
@@ -683,7 +685,7 @@ function updateTrail() {
     let particleIdToShow = selectedParticleId ?? hoveredParticleId;
     if (particleIdToShow !== null && latestParticlesData) {
         const p = latestParticlesData.find(ptc => ptc.id === particleIdToShow);
-        if (p && p.history && p.history.length > 1) {
+        if (p?.history && p.history.length > 1) {
             const points = p.history.map(pos => new THREE.Vector3(pos.x, pos.y, pos.z));
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
             const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
