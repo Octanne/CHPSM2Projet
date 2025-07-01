@@ -355,6 +355,7 @@ function downloadParticlesCurrentStates() {
     });
 };
 
+let particlesUploadedSave = {};
 document.getElementById('uploadParticlesBtn').onclick = function() {
     document.getElementById('uploadParticlesInput').click();
 };
@@ -365,6 +366,8 @@ document.getElementById('uploadParticlesInput').onchange = function(e) {
     reader.onload = function(evt) {
         try {
             const json = JSON.parse(evt.target.result);
+            // We save by cloning the JSON to avoid modifying the original file
+            particlesUploadedSave = JSON.parse(JSON.stringify(json));
             fetch('/api/particles', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -608,11 +611,26 @@ document.addEventListener('mousemove', function(e) {
 
 document.getElementById('resetBtn').onclick = function() {
     if (confirm("Voulez-vous vraiment réinitialiser la simulation ? Cela effacera toutes les particules et l'historique.")) {
-        fetch('/api/reset', { method: 'POST' })
-            .then(() => {
-                // Option simple : recharge toute la page
-                location.reload();
+        if (particlesUploadedSave && Object.keys(particlesUploadedSave).length > 0) {
+            // Si on a un fichier de particules uploadé, on le réutilise
+            return fetch('/api/particles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(particlesUploadedSave)
+            }).then(() => {
+                // On recharge les paramètres par défaut
+                fetchSettings();
+                fetchParticles();
             });
+        } else {
+            // Sinon, on envoie une requête pour réinitialiser la simulation}
+            fetch('/api/reset', { method: 'POST' })
+                .then(() => {
+                    // Sinon, on recharge les paramètres par défaut
+                    // Option simple : recharge toute la page
+                    location.reload();
+                });
+        }
     }
 };
 
