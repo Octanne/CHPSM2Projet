@@ -25,6 +25,10 @@ let selectedParticleId = null;
 let latestParticlesData = [];
 let trailLine = null;
 
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -332,13 +336,42 @@ document.getElementById('closeBtn').onclick = function() {
     }
 };
 
-// Event listeners for download and upload buttons
-document.getElementById('downloadParticlesBtn').onclick = function() {
-    downloadParticlesCurrentStates();
-};
 document.getElementById('recordBtn').onclick = function() {
-    downloadParticlesCurrentStates();
+    if (!isRecording) {
+        document.body.classList.add('hide-gui');
+        const stream = renderer.domElement.captureStream(30);
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        mediaRecorder.ondataavailable = function(e) {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+        mediaRecorder.onstop = function() {
+            document.body.classList.remove('hide-gui');
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'simulation.webm';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        // Passe en carré rouge
+        document.getElementById('recordBtn').innerHTML = `<span id="recordIcon" style="display:inline-block;width:18px;height:18px;background:#e53935;vertical-align:middle;"></span>`;
+    } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        // Reviens au cercle rouge
+        document.getElementById('recordBtn').innerHTML = `<span id="recordIcon" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#e53935;vertical-align:middle;"></span>`;
+    }
 };
+
+
 function downloadParticlesCurrentStates() {
     fetch('/api/particles').then(r => r.json()).then(data => {
         const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
