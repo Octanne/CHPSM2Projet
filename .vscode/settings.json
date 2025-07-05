@@ -57,25 +57,6 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "utility": "cpp",
-        "variant": "cpp",
-        "csignal": "cpp",
-        "any": "cpp",
-        "bitset": "cpp",
-        "charconv": "cpp",
-        "chrono": "cpp",
-        "codecvt": "cpp",
-        "forward_list": "cpp",
-        "list": "cpp",
-        "unordered_set": "cpp",
-        "algorithm": "cpp",
-        "iterator": "cpp",
-        "memory_resource": "cpp",
-        "random": "cpp",
-        "regex": "cpp",
-        "ranges": "cpp",
-        "span": "cpp",
-        "cinttypes": "cpp",
-        "valarray": "cpp",
-        "format": "cpp"
+        "variant": "cpp"
     }
 }
