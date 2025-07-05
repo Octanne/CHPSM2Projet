@@ -112,10 +112,15 @@ int main(int argc, char *argv[]) {
                 for (const auto &p : particles) {
                     tree.insert(&p);
                 }
+                float rewind_max_history_local;
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    rewind_max_history_local = settings.rewind_max_history;
+                }
                 #pragma omp parallel for 
                 for (auto &p : particles) {
                     updateParticleState(p, tree, settings.dt);
-                    p.saveState(settings.current_time, settings.rewind_max_history);
+                    p.saveState(settings.current_time, rewind_max_history_local);
                 }
                 settings.current_time += settings.dt;
             }

@@ -15,7 +15,7 @@ void APIRest::start(int port) {
         
         // GET /particles
         server.Get("/particles", [this](const httplib::Request& req, httplib::Response& res) {
-            std::lock_guard<std::mutex> lock(mtx);
+            //std::lock_guard<std::mutex> lock(mtx);
             int resolution = settings.history_resolution;
             json j = json::array();
             for (const auto& p : particles) {
@@ -259,18 +259,21 @@ void APIRest::start(int port) {
 
         // POST /stop
         server.Post("/stop", [this](const httplib::Request&, httplib::Response& res) {
+            std::lock_guard<std::mutex> lock(mtx);
             settings.closed = true;
             res.status = 200;
         });
 
         // POST /pause
         server.Post("/pause", [this](const httplib::Request&, httplib::Response& res) {
+            std::lock_guard<std::mutex> lock(mtx);
             paused = true;
             res.status = 200;
         });
 
         // POST /resume
         server.Post("/resume", [this](const httplib::Request&, httplib::Response& res) {
+            std::lock_guard<std::mutex> lock(mtx);
             paused = false;
             res.status = 200;
         });
