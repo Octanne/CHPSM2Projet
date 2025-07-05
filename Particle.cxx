@@ -41,6 +41,8 @@ float Particle::x() const { return position.x; }
 float Particle::y() const { return position.y; }
 float Particle::z() const { return position.z; }
 float Particle::getMass() const { return mass; }
+std::string Particle::getName() const { return name; }
+void Particle::setName(const std::string& n) { name = n; }
 int Particle::getId() const { return id; }
 Vector3D Particle::getPosition() const { return position; }
 Vector3D Particle::getVelocity() const { return velocity; }
@@ -119,6 +121,8 @@ bool Particle::restoreState(float target_time) {
 const std::deque<ParticleState>& Particle::getStateHistory() const {
     return state_history;
 }
+
+
 
 
 int Particle::id_counter = 0;

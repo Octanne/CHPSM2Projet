@@ -29,13 +29,14 @@ struct ParticleState {
 // Classe représentant une particule en 3D
 class Particle {
     Vector3D position;
+    std::string name; 
     Vector3D velocity;
     Vector3D acceleration;
     float mass;
     float masseVolumique;
     std::string colorHex; // Couleur de la particule en hexadécimal
     int id;
-    static int id_counter; // Identifiant unique pour chaque particule
+   
     std::deque<Vector3D> history;
     std::deque<ParticleState> state_history;
     
@@ -43,6 +44,7 @@ public:
     Particle();
     Particle(float x, float y, float z, float vx, float vy, float vz, float mass, float masseVolumique = 1.0f, std::string colorHex = "");
     ~Particle();
+    static int id_counter; // Identifiant unique pour chaque particule
 
     // Accesseurs
     float x() const;
@@ -51,6 +53,9 @@ public:
     float getMass() const;
     float getMasseVolumique() const;
     std::string getColorHex() const;
+
+    std::string getName() const;
+    void setName(const std::string& n);
     
     void setMasseVolumique(float v);
     void setColorHex(const std::string &color);

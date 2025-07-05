@@ -27,6 +27,7 @@ void APIRest::start(int port) {
                 }
                 j.push_back({
                     {"id", p.getId()},
+                    {"name", p.getName()},
                     {"x", p.x()},
                     {"y", p.y()},
                     {"z", p.z()},
@@ -78,6 +79,7 @@ void APIRest::start(int port) {
 
             res.status = 200;
         });
+        
 
         // POST /particles
         server.Post("/particles", [this](const httplib::Request& req, httplib::Response& res) {
@@ -85,7 +87,7 @@ void APIRest::start(int port) {
             try {
                 auto j = json::parse(req.body);
                 printf("Received particles data: %s\n", j.dump().c_str());
-
+                Particle::id_counter = 0;
                 particles.clear();
                 particles.reserve(j.size());
 
@@ -103,7 +105,12 @@ void APIRest::start(int port) {
                     float mass = jp.value("mass", 1.f);
                     float masseVol = jp.value("masseVolumique", 1.f);
                     std::string colorHex = jp.value("colorHex", "");
-                    particles.emplace_back(x, y, z, jp.value("vx", 0.f), jp.value("vy", 0.f), jp.value("vz", 0.f), mass, masseVol, colorHex);
+                    std::string nom = jp.value("name", ""); // Récupère le nom s'il existe, sinon chaîne vide
+
+                    Particle p(x, y, z, jp.value("vx", 0.f), jp.value("vy", 0.f), jp.value("vz", 0.f), mass, masseVol, colorHex);
+                    if (!nom.empty()) p.setName(nom); // Ajoute le nom si présent
+                    particles.push_back(p);
+
                     min_x = std::min(min_x, x);
                     min_y = std::min(min_y, y);
                     min_z = std::min(min_z, z);

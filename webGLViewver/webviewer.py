@@ -91,6 +91,7 @@ def api_rewind():
 def api_reset():
     requests.post(f"{API_URL}/reset")
     return "", 204
+    
 
 if __name__ == "__main__":
     class No200Filter(logging.Filter):

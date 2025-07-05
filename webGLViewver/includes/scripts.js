@@ -29,6 +29,8 @@ let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording = false;
 
+let hiddenParticles = new Set();
+
 function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -79,39 +81,23 @@ function updateParticles(particles) {
     let displayParticles = scaleEnabled
         ? particles.map(applyScaleToParticle)
         : particles;
-
-    // 1. Calcule la taille brute pour chaque particule
-    const rawSizes = displayParticles.map(p =>
-        Math.cbrt((p.mass || 1) / (p.masseVolumique || 1))
-    );
-    // 2. Trouve la taille brute maximale
-    const maxRawSize = Math.max(...rawSizes, 1);
-
-    // 3. Taille max d'affichage
-    const maxDisplaySize = 15;
-    const minDisplaySize = 5;
+    displayParticles = displayParticles.filter(p => !hiddenParticles.has(p.id));
 
     if (particleAsMesh) {
         particlesMeshses = [];
         const sphereMaterialDft = new THREE.MeshStandardMaterial({ color: particleColor });
         displayParticles.forEach((p, i) => {
-            let sphereMaterial = sphereMaterialDft;
-            if (p.colorHex?.startsWith("#")) {
-                sphereMaterial = sphereMaterialDft.clone();
-                // Si la particule a une couleur définie, on l'utilise
-                const color = parseInt(p.colorHex.replace("#", "0x"));
-                sphereMaterial.color.setHex(color);
-            }
-            // 4. Taille proportionnelle
-            let size = rawSizes[i] / maxRawSize * maxDisplaySize;
-            size = Math.max(minDisplaySize, size);
-
-            const geometry = new THREE.SphereGeometry(size, 16, 16);
-            const mesh = new THREE.Mesh(geometry, sphereMaterial);
+            // Utilise la taille pré-calculée
+            const size = p.displaySize || 8;
+            const geometry = new THREE.SphereGeometry(size, 24, 24);
+            const material = p.colorHex
+                ? new THREE.MeshStandardMaterial({ color: p.colorHex })
+                : sphereMaterialDft;
+            const mesh = new THREE.Mesh(geometry, material);
             mesh.position.set(p.x, p.y, p.z);
             mesh.userData.particleId = p.id;
-            particlesMeshses.push(mesh);
             scene.add(mesh);
+            particlesMeshses.push(mesh);
         });
     } else {
         const geometry = new THREE.BufferGeometry();
@@ -201,7 +187,23 @@ function checkIfIntervalUpdateNeedToRegister() {
 
 function fetchParticles() {
     fetch('/api/particles').then(r=>r.json()).then(data=>{
-        latestParticlesData = data; // <= Stockage de la dernière frame
+        // Calcul de la taille d'affichage pour chaque particule (une seule fois)
+        if (!data[0]?.displaySize) {
+            //  Calcule la taille brute pour chaque particule
+            const rawSizes = data.map(p =>
+                Math.cbrt((p.mass || 1) / (p.masseVolumique || 1))
+            );
+            // Trouve la taille brute maximale
+            const maxRawSize = Math.max(...rawSizes, 1);
+            //  Taille max d'affichage
+            const maxDisplaySize = 15;
+            const minDisplaySize = 5;
+            data.forEach((p, i) => {
+                // Taille relative, mais toujours la même pour chaque id
+                p.displaySize = minDisplaySize + (rawSizes[i] / maxRawSize) * (maxDisplaySize - minDisplaySize);
+            });
+        }
+        latestParticlesData = data;
         updateParticles(data);
         updateTrail(); 
     });
@@ -667,6 +669,17 @@ document.getElementById('resetBtn').onclick = function() {
     }
 };
 
+document.getElementById('showAllParticlesBtn').onclick = () => {
+    hiddenParticles.clear();
+    updateParticles(latestParticlesData);
+    updateParticleList(latestParticlesData);
+};
+document.getElementById('hideAllParticlesBtn').onclick = () => {
+    latestParticlesData.forEach(p => hiddenParticles.add(p.id));
+    updateParticles(latestParticlesData);
+    updateParticleList(latestParticlesData);
+};
+
 document.addEventListener('mouseup', function(e) {
     if (isDraggingTimeline) {
         isDraggingTimeline = false;
@@ -683,7 +696,7 @@ function onPointerMove(event) {
     const intersects = raycaster.intersectObjects(particlesMeshses);
     if (intersects.length > 0) {
         hoveredParticleId = intersects[0].object.userData.particleId;
-        showParticleInfo(hoveredParticleId, event.clientX, event.clientY);
+        showParticleInfo(hoveredParticleId); 
     } else {
         hoveredParticleId = null;
         hideParticleInfo();
@@ -694,7 +707,7 @@ function onPointerMove(event) {
 function onPointerClick(event) {
     if (hoveredParticleId !== null) {
         selectedParticleId = hoveredParticleId;
-        showParticleInfo(selectedParticleId, event.clientX, event.clientY, true);
+        showParticleInfo(selectedParticleId);
         updateTrail();
     } else {
         selectedParticleId = null;
@@ -703,17 +716,29 @@ function onPointerClick(event) {
     }
 }
 
-function showParticleInfo(id, x, y, clicked = false) {
+function showParticleInfo(id, x = null, y = null, clicked = false) {
     const p = latestParticlesData.find(ptc => ptc.id === id);
     if (!p) return;
-    let html = `<b>Particule #${p.id}</b><br>`;
+    let html = `<b>Particule #${p.id}`;
+    if (p.name) html += ` — <span style="color:#ffd369">${p.name}</span>`;
+    html += `</b><br>`;
     html += `Masse : ${p.mass}<br>`;
     if (p.masseVolumique !== undefined) html += `Masse Vol. : ${p.masseVolumique}<br>`;
-    if (p.name) html += `Nom : ${p.name}<br>`;
     html += `Position : (${p.x}, ${p.y}, ${p.z})<br>`;
     html += `Vitesse : (${p.vx}, ${p.vy}, ${p.vz})<br>`;
     if (clicked) html += "<i>(Sélectionnée)</i>";
     const popup = document.getElementById('particleInfoPopup');
+
+    // Si x/y ne sont pas fournis, on projette la position 3D de la particule
+    if (x === null || y === null) {
+        // Crée un vecteur 3D pour la position de la particule
+        const vector = new THREE.Vector3(p.x, p.y, p.z);
+        vector.project(camera); // Projection dans l'espace écran normalisé
+        // Conversion en pixels
+        x = (vector.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
+        y = (-vector.y * 0.5 + 0.5) * renderer.domElement.clientHeight;
+    }
+
     popup.innerHTML = html;
     popup.style.left = `${x + 16}px`;
     popup.style.top = `${y + 16}px`;
@@ -745,6 +770,62 @@ function updateTrail() {
         }
     }
 }
+
+function updateParticleList(particles) {
+    const list = document.getElementById('particleList');
+    if (!list) return;
+    list.innerHTML = '';
+    particles.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'particle-list-row';
+        const isHidden = hiddenParticles.has(p.id);
+        row.innerHTML = `
+            <span style="color:#ffd369">#${p.id}</span>
+            ${p.name ? ` <span style="color:#aaa;font-size:0.98em;">${p.name}</span>` : ''}
+            <span class="eye-btn" data-id="${p.id}" style="float:right;cursor:pointer;margin-left:10px;">
+                ${isHidden
+                    ? `<svg width="18" height="18" viewBox="0 0 20 20" fill="#888"><path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6zm8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><line x1="4" y1="4" x2="16" y2="16" stroke="#e74c3c" stroke-width="2"/></svg>`
+                    : `<svg width="18" height="18" viewBox="0 0 20 20" fill="#ffd369"><path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6zm8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>`
+                }
+            </span>
+        `;
+        row.onclick = (e) => {
+            // Ne sélectionne pas si clic sur l'œil
+            if (e.target.closest('.eye-btn')) return;
+            selectedParticleId = p.id;
+            showParticleInfo(p.id);
+            updateTrail();
+        };
+        list.appendChild(row);
+    });
+
+    // Ajoute les listeners sur les yeux
+    list.querySelectorAll('.eye-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.getAttribute('data-id'));
+            if (hiddenParticles.has(id)) hiddenParticles.delete(id);
+            else hiddenParticles.add(id);
+            updateParticles(latestParticlesData); // Met à jour l'affichage
+            updateParticleList(latestParticlesData); // Rafraîchit la liste
+        };
+    });
+}
+
+// Met à jour la liste à chaque fetch de particules
+function fetchAndDisplayParticleList() {
+    fetch('/api/particles')
+        .then(res => res.json())
+        .then(data => {
+            updateParticleList(data);
+        });
+}
+
+// Appeler au chargement de la page et à chaque update
+window.addEventListener('DOMContentLoaded', () => {
+    fetchAndDisplayParticleList();
+});
+setInterval(fetchAndDisplayParticleList, 1000);
 
 // Initialize the application
 init();
