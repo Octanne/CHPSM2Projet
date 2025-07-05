@@ -74,9 +74,20 @@ function animate() {
 
 let particlesMeshses = [];
 function updateParticles(particles) {
-    if (particlesMesh) scene.remove(particlesMesh);
+    // Nettoyage mémoire des anciens objets
+    if (particlesMesh) {
+        scene.remove(particlesMesh);
+        if (particlesMesh.geometry) particlesMesh.geometry.dispose();
+        if (particlesMesh.material) particlesMesh.material.dispose();
+        particlesMesh = null;
+    }
     if (particlesMeshses) {
-        particlesMeshses.forEach(mesh => scene.remove(mesh));
+        particlesMeshses.forEach(mesh => {
+            scene.remove(mesh);
+            if (mesh.geometry) mesh.geometry.dispose();
+            if (mesh.material) mesh.material.dispose();
+        });
+        particlesMeshses = [];
     }
     let displayParticles = scaleEnabled
         ? particles.map(applyScaleToParticle)
@@ -111,7 +122,6 @@ function updateParticles(particles) {
 
         scene.add(particlesMesh);
     }
-
 }
 
 let showSimBox = true; // Ajout d'un état pour afficher/cacher la boîte
@@ -186,6 +196,9 @@ function checkIfIntervalUpdateNeedToRegister() {
 }
 
 function fetchParticles() {
+    let url = '/api/particles';
+    const reso = document.getElementById('history_resolution_current').textContent;
+    if (reso && reso !== "Tout") url += '?history_resolution=' + encodeURIComponent(reso);
     fetch('/api/particles').then(r=>r.json()).then(data=>{
         // Calcul de la taille d'affichage pour chaque particule (une seule fois)
         if (!data[0]?.displaySize) {
@@ -225,6 +238,9 @@ function fetchSettings() {
         document.getElementById('t_total_input').placeholder = data.t_total;
         document.getElementById('nb_particles_input').placeholder = data.nb_particles;
         document.getElementById('current_time_input').placeholder = data.current_time;
+        document.getElementById('history_resolution_current').textContent = data.history_resolution ?? "Tout";
+        document.getElementById('history_resolution_current').title = "Nombre de points d'historique envoyés au client";
+        document.getElementById('history_resolution_input').placeholder = data.history_resolution ?? "Tout";
         
         // Update box overlay fields
         for (const key of ["MIN_X", "MIN_Y", "MIN_Z", "MAX_X", "MAX_Y", "MAX_Z"]) {
@@ -285,6 +301,9 @@ document.getElementById('settingsForm').onsubmit = function(e){
     
     const v5 = document.getElementById('nb_particles_input').value;
     if (v5 !== "") payload.nb_particles = parseInt(v5);
+
+    const v6 = document.getElementById('history_resolution_input').value;
+    if (v6 !== "") payload.history_resolution = parseInt(v6);
     
     if (Object.keys(payload).length === 0) return;
     fetch('/api/settings', {
@@ -296,6 +315,7 @@ document.getElementById('settingsForm').onsubmit = function(e){
         document.getElementById('t_total_input').value = "";
         document.getElementById('nb_particles_input').value = "";
         document.getElementById('current_time_input').value = "";
+        document.getElementById('history_resolution_input').value = "";
         fetchSettings();
     });
 };

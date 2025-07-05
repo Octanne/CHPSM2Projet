@@ -19,6 +19,7 @@ struct SimulationSettings {
     bool closed;
     float MAX_Y, MAX_X, MAX_Z;
     float MIN_Y, MIN_X, MIN_Z;
+    float history_resolution;
 };
 
 class APIRest {

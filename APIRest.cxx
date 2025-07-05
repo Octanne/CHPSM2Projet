@@ -11,14 +11,33 @@ APIRest::APIRest(Octree& tree, std::vector<Particle>& particles, SimulationSetti
 void APIRest::start(int port) {
     running = true;
     server_thread = std::thread([this, port]() {
+
+        
         // GET /particles
-        server.Get("/particles", [this](const httplib::Request&, httplib::Response& res) {
+        server.Get("/particles", [this](const httplib::Request& req, httplib::Response& res) {
             std::lock_guard<std::mutex> lock(mtx);
+            int resolution = settings.history_resolution;
             json j = json::array();
             for (const auto& p : particles) {
                 // On construit l'historique de positions
                 json history = json::array();
-                for (const auto& st : p.getStateHistory()) {
+                const auto& hist = p.getStateHistory();
+                int n = hist.size();
+                int step = (resolution > 0 && resolution < n) ? std::max(1, n / resolution) : 1;
+                for (int i = 0; i < n; i += step) {
+                    const auto& st = hist[i];
+                    history.push_back({
+                        {"x", st.position.x},
+                        {"y", st.position.y},
+                        {"z", st.position.z}
+                    });
+                }
+                // Toujours ajouter le dernier point si pas déjà inclus
+                if (n > 0 && (history.empty() || 
+                    (history.back()["x"] != hist.back().position.x ||
+                    history.back()["y"] != hist.back().position.y ||
+                    history.back()["z"] != hist.back().position.z))) {
+                    const auto& st = hist.back();
                     history.push_back({
                         {"x", st.position.x},
                         {"y", st.position.y},
@@ -37,7 +56,7 @@ void APIRest::start(int port) {
                     {"mass", p.getMass()},
                     {"masseVolumique", p.getMasseVolumique()},
                     {"colorHex", p.getColorHex()},
-                    {"history", history} // Ajout de l'historique ici !
+                    {"history", history}
                 });
             }
             res.set_content(j.dump(), "application/json");
@@ -180,7 +199,8 @@ void APIRest::start(int port) {
                 {"MAX_Z", settings.MAX_Z},
                 {"MIN_Y", settings.MIN_Y},
                 {"MIN_X", settings.MIN_X},
-                {"MIN_Z", settings.MIN_Z}
+                {"MIN_Z", settings.MIN_Z},
+                {"history_resolution", settings.history_resolution}
             };
             res.set_content(j.dump(), "application/json");
         });
@@ -194,6 +214,7 @@ void APIRest::start(int port) {
                 if (j.contains("dt")) settings.dt = j["dt"];
                 if (j.contains("current_time")) settings.current_time = j["current_time"];
                 if (j.contains("rewind_max_history")) settings.rewind_max_history = j["rewind_max_history"];
+                if (j.contains("history_resolution")) settings.history_resolution = j["history_resolution"];
                 bool update_bornes = false;
                 if (j.contains("MAX_Y")) { settings.MAX_Y = j["MAX_Y"]; update_bornes = true; }
                 if (j.contains("MAX_X")) { settings.MAX_X = j["MAX_X"]; update_bornes = true; }
@@ -201,6 +222,7 @@ void APIRest::start(int port) {
                 if (j.contains("MIN_Y")) { settings.MIN_Y = j["MIN_Y"]; update_bornes = true; }
                 if (j.contains("MIN_X")) { settings.MIN_X = j["MIN_X"]; update_bornes = true; }
                 if (j.contains("MIN_Z")) { settings.MIN_Z = j["MIN_Z"]; update_bornes = true; }
+                
                 if (update_bornes) {
                     MyRNG::updateMaxMin(
                         settings.MIN_X, settings.MAX_X, settings.MIN_Y, 
