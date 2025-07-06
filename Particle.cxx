@@ -93,7 +93,8 @@ void Particle::drawGL() const {
     #endif
 }
 
-void Particle::saveState(float time, float rewind_max_history) {
+void Particle::saveState(float time, float rewind_max_history, std::mutex &mtx) {
+    std::lock_guard<std::mutex> lock(mtx);
     state_history.push_back({position, velocity, time});
     // On garde seulement les 5 dernières secondes
     while (rewind_max_history != -1 && !state_history.empty() && (time - state_history.front().time) > rewind_max_history) {
@@ -102,7 +103,8 @@ void Particle::saveState(float time, float rewind_max_history) {
 }
 
 
-bool Particle::restoreState(float target_time) {
+bool Particle::restoreState(float target_time, std::mutex &mtx) {
+    std::lock_guard<std::mutex> lock(mtx);
     if (state_history.empty()) return false;
     // Cherche le dernier état <= target_time
     for (auto it = state_history.rbegin(); it != state_history.rend(); ++it) {

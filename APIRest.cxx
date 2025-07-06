@@ -23,9 +23,11 @@ void APIRest::start(int port) {
                 json history = json::array();
                 const auto& hist = p.getStateHistory();
                 int n = hist.size();
-                int step = (resolution > 0 && resolution < n) ? std::max(1, n / resolution) : 1;
+                //int step = (resolution > 0 && resolution < n) ? std::max(1, n / resolution) : 1;
+                int step = 1;
                 for (int i = 0; i < n; i += step) {
                     const auto& st = hist[i];
+                    // we check if pas null car peut être déjà pop de l'historique
                     history.push_back({
                         {"x", st.position.x},
                         {"y", st.position.y},
@@ -68,7 +70,7 @@ void APIRest::start(int port) {
             float rewind_delta = j.value("rewind_time", 5.0f);
             float rewind_time = std::max(0.f, settings.current_time - rewind_delta);
             for (auto& p : particles) {
-                p.restoreState(rewind_time);
+                p.restoreState(rewind_time, mtx); // Restore state at rewind_time
             }
             settings.current_time = rewind_time;
             res.status = 200;
@@ -185,7 +187,7 @@ void APIRest::start(int port) {
 
         // GET /settings
         server.Get("/settings", [this](const httplib::Request&, httplib::Response& res) {
-            std::lock_guard<std::mutex> lock(mtx);
+            //std::lock_guard<std::mutex> lock(mtx);
             json j = {
                 {"t_total", settings.t_total},
                 {"dt", settings.dt},

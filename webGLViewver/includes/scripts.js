@@ -855,5 +855,5 @@ fetchParticles();
 renderer.domElement.addEventListener('mousemove', onPointerMove);
 renderer.domElement.addEventListener('click', onPointerClick);
 // Set intervals for periodic updates
-particlesInterval = setInterval(fetchParticles, 200);
+particlesInterval = setInterval(fetchParticles, 1000 / 30);
 settingsInterval = setInterval(fetchSettings, 1000);

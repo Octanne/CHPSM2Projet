@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <deque>
+#include <mutex>
 
 // Structure de vecteur en 3D
 struct Vector3D {
@@ -62,8 +63,8 @@ public:
     int getId() const;
     Vector3D getPosition() const;
     Vector3D getVelocity() const;
-    void saveState(float time, float rewind_max_history);
-    bool restoreState(float target_time);
+    void saveState(float time, float rewind_max_history, std::mutex &mtx);
+    bool restoreState(float target_time, std::mutex &mtx);
     const std::deque<ParticleState>& getStateHistory() const;
 
     // Réinitialise l'accélération pour la nouvelle itération

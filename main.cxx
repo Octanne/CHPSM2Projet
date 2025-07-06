@@ -56,6 +56,7 @@ std::vector<Particle> initParticles(int N) {
 }
 
 int main(int argc, char *argv[]) {
+    omp_set_num_threads(std::max(1, omp_get_max_threads() - 4)); // Laisse 2 threads libres pour l'API et le système
     namespace po = boost::program_options;
     int N;
     bool display;
@@ -105,23 +106,26 @@ int main(int argc, char *argv[]) {
     api.start(portAPI);
 
     if (!display) {
-        printf("Simulation en mode headless pour %d secondes avec %d particules...\n", static_cast<int>(settings.t_total), N);
+        printf("Simulation en mode headless pour %f secondes avec %d particules...\n", settings.t_total, N);
         while ((settings.current_time < settings.t_total || settings.t_total == -1) && !settings.closed) {
             if (!paused) {
                 tree.clear();
                 for (const auto &p : particles) {
                     tree.insert(&p);
                 }
+
+                // Pas besoin de lock supplémentaire ici : chaque thread modifie une Particle différente
                 #pragma omp parallel for 
                 for (auto &p : particles) {
                     updateParticleState(p, tree, settings.dt);
-                    p.saveState(settings.current_time, settings.rewind_max_history);
+                    p.saveState(settings.current_time, settings.rewind_max_history, mtx);
                 }
+                std::lock_guard<std::mutex> lock(mtx);
                 settings.current_time += settings.dt;
             }
 
             while (!settings.closed && settings.current_time >= settings.t_total && settings.t_total != -1) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
         }
     }
@@ -212,7 +216,7 @@ int main(int argc, char *argv[]) {
                 #pragma omp parallel for 
                 for (auto &p : particles) {
                     updateParticleState(p, tree, settings.dt);
-                    p.saveState(settings.current_time, settings.rewind_max_history);
+                    p.saveState(settings.current_time, settings.rewind_max_history, mtx);
                 }
                 settings.current_time += settings.dt;
                 if (simulationTime > settings.t_total)
