@@ -196,10 +196,9 @@ function checkIfIntervalUpdateNeedToRegister() {
 }
 
 function fetchParticles() {
-    let url = '/api/particles';
-    const reso = document.getElementById('history_resolution_current').textContent;
-    if (reso && reso !== "Tout") url += '?history_resolution=' + encodeURIComponent(reso);
     fetch('/api/particles').then(r=>r.json()).then(data=>{
+        // Update particle list
+        updateParticleList(data);
         // Calcul de la taille d'affichage pour chaque particule (une seule fois)
         if (!data[0]?.displaySize) {
             //  Calcule la taille brute pour chaque particule
@@ -794,12 +793,23 @@ function updateTrail() {
 function updateParticleList(particles) {
     const list = document.getElementById('particleList');
     if (!list) return;
-    list.innerHTML = '';
+
+    // Build a map of current rows by particle id
+    const existingRows = {};
+    Array.from(list.children).forEach(row => {
+        const id = parseInt(row.getAttribute('data-id'));
+        if (!isNaN(id)) existingRows[id] = row;
+    });
+
+    // Track ids to remove
+    const idsToRemove = new Set(Object.keys(existingRows).map(Number));
+
     particles.forEach(p => {
-        const row = document.createElement('div');
-        row.className = 'particle-list-row';
+        let row = existingRows[p.id];
         const isHidden = hiddenParticles.has(p.id);
-        row.innerHTML = `
+
+        // Row HTML content
+        const html = `
             <span style="color:#ffd369">#${p.id}</span>
             ${p.name ? ` <span style="color:#aaa;font-size:0.98em;">${p.name}</span>` : ''}
             <span class="eye-btn" data-id="${p.id}" style="float:right;cursor:pointer;margin-left:10px;">
@@ -809,43 +819,52 @@ function updateParticleList(particles) {
                 }
             </span>
         `;
+
+        if (row) {
+            // Update only if content changed
+            if (row._lastHtml !== html) {
+                row.innerHTML = html;
+                row._lastHtml = html;
+            }
+            idsToRemove.delete(p.id);
+        } else {
+            // Create new row
+            row = document.createElement('div');
+            row.className = 'particle-list-row';
+            row.setAttribute('data-id', p.id);
+            row.innerHTML = html;
+            row._lastHtml = html;
+            list.appendChild(row);
+        }
+
+        // Set up row click
         row.onclick = (e) => {
-            // Ne sélectionne pas si clic sur l'œil
             if (e.target.closest('.eye-btn')) return;
             selectedParticleId = p.id;
             showParticleInfo(p.id);
             updateTrail();
         };
-        list.appendChild(row);
+
+        // Set up eye button click
+        const eyeBtn = row.querySelector('.eye-btn');
+        if (eyeBtn) {
+            eyeBtn.onclick = (e) => {
+                e.stopPropagation();
+                const id = parseInt(eyeBtn.getAttribute('data-id'));
+                if (hiddenParticles.has(id)) hiddenParticles.delete(id);
+                else hiddenParticles.add(id);
+                updateParticles(latestParticlesData);
+                updateParticleList(latestParticlesData);
+            };
+        }
     });
 
-    // Ajoute les listeners sur les yeux
-    list.querySelectorAll('.eye-btn').forEach(btn => {
-        btn.onclick = (e) => {
-            e.stopPropagation();
-            const id = parseInt(btn.getAttribute('data-id'));
-            if (hiddenParticles.has(id)) hiddenParticles.delete(id);
-            else hiddenParticles.add(id);
-            updateParticles(latestParticlesData); // Met à jour l'affichage
-            updateParticleList(latestParticlesData); // Rafraîchit la liste
-        };
+    // Remove rows for particles no longer present
+    idsToRemove.forEach(id => {
+        const row = existingRows[id];
+        if (row) list.removeChild(row);
     });
 }
-
-// Met à jour la liste à chaque fetch de particules
-function fetchAndDisplayParticleList() {
-    fetch('/api/particles')
-        .then(res => res.json())
-        .then(data => {
-            updateParticleList(data);
-        });
-}
-
-// Appeler au chargement de la page et à chaque update
-window.addEventListener('DOMContentLoaded', () => {
-    fetchAndDisplayParticleList();
-});
-setInterval(fetchAndDisplayParticleList, 1000);
 
 // Initialize the application
 init();
